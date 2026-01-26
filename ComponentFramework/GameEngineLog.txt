@@ -1,0 +1,12 @@
+Fri Jan 23 11:23:24 2026
+[INFO]: Starting the SceneManager
+[INFO]: OpenGL version: 4.6.14761 Compatibility Profile Context 21.30.44.14 30.0.13044.14002
+[INFO]: Graphics card vendor: ATI Technologies Inc.
+[INFO]: Graphics card name: AMD Radeon(TM) Graphics
+[INFO]: GLSL Version: 4.60
+[INFO]: Created Scene0: 
+[INFO]: Loading assets for Actor: 
+[ERROR]: Loading assets for Actor/Components:  in file: C:\Users\laval\Desktop\GP 24 - 27\Engines4ComponentSystem\ComponentFramework26.258.0\ComponentFramework\Actor.cpp on line: 11
+[INFO]: Deleting the SceneManager
+[INFO]: Deleting assets for Actor: 
+[INFO]: Deleted Scene0: 
