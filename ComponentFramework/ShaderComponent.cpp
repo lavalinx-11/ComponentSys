@@ -28,7 +28,7 @@ bool ShaderComponent::OnCreate() {
 	if (status == false) return false;
 	status = Link();
 	if (status == false) return false;
-
+	//std::cout << "Shader Program ID: " << shaderID << std::endl;
 	SetUniformLocations();
 	return true;
 }

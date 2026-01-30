@@ -4,8 +4,8 @@
 #include "Vector.h"
 #include <Matrix.h>
 #include "Actor.h"
-
-
+#include "CameraActor.h"
+#include "Window.h"
 /// Forward declarations 
 union SDL_Event;
 
@@ -13,11 +13,12 @@ union SDL_Event;
 class Scene0g : public Scene {
 private:
 	Actor * actor;
+	CameraActor* camera;
 	bool drawInWireMode;
 	bool showImGuiDemoWindow = true; // optional for testing
 	char textBuffer[256] = "";       // input text buffer
 	int buttonClicks = 0;            // button counter
-	class Window* window;
+	Window* window;
 	SDL_GLContext context;
 
 public:

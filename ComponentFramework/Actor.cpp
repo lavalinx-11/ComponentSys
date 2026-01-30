@@ -1,6 +1,6 @@
 #include "Actor.h"
 #include "Debug.h"
-
+#include <MMath.h>
 Actor::Actor(Component* parent_):Component(parent_) {}
 
 bool Actor::OnCreate() {

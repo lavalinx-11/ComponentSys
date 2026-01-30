@@ -140,6 +140,7 @@
     <ClCompile Include="C:\GameDev\imgui\imgui_impl_sdl3.cpp" />
     <ClCompile Include="C:\GameDev\imgui\imgui_tables.cpp" />
     <ClCompile Include="C:\GameDev\imgui\imgui_widgets.cpp" />
+    <ClCompile Include="CameraActor.cpp" />
     <ClCompile Include="Debug.cpp" />
     <ClCompile Include="GuiWindow.cpp" />
     <ClCompile Include="MaterialComponent.cpp" />
@@ -149,6 +150,7 @@
     <ClCompile Include="Scene0g.cpp" />
     <ClCompile Include="ShaderComponent.cpp" />
     <ClCompile Include="Timer.cpp" />
+    <ClCompile Include="TransformComponent.cpp" />
     <ClCompile Include="UIManager.cpp" />
     <ClCompile Include="Window.cpp" />
   </ItemGroup>
@@ -164,6 +166,7 @@
     <ClInclude Include="C:\GameDev\imgui\imstb_rectpack.h" />
     <ClInclude Include="C:\GameDev\imgui\imstb_textedit.h" />
     <ClInclude Include="C:\GameDev\imgui\imstb_truetype.h" />
+    <ClInclude Include="CameraActor.h" />
     <ClInclude Include="Component.h" />
     <ClInclude Include="Debug.h" />
     <ClInclude Include="GuiWindow.h" />

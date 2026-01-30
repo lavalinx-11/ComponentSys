@@ -2,13 +2,14 @@
 #include <vector>
 #include <iostream>
 #include "Component.h"
+#include "TransformComponent.h"
 class Actor : public Component {
 	Actor(const Actor&) = delete;
 	Actor(Actor&&) = delete;
 	Actor& operator= (const Actor&) = delete;
 	Actor& operator=(Actor&&) = delete;
 
-protected:
+private:
 	std::vector<Component*> components;
 
 public:
@@ -36,7 +37,7 @@ public:
 		return nullptr;
 	}
 
-	template<typename ComponentTemplate> 
+	template<typename ComponentTemplate>
 	void RemoveComponent() {
 		for (size_t i = 0; i < components.size(); i++) {
 			if (dynamic_cast<ComponentTemplate*>(components[i]) != nullptr) {
@@ -51,4 +52,3 @@ public:
 	void ListComponents() const;
 	void RemoveAllComponents();
 };
-

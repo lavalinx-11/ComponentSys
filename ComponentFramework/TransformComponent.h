@@ -9,10 +9,10 @@ private:
 	Vec3 pos;
 	Vec3 scale;
 	Quaternion orientation;
- 
+
 public:
 	TransformComponent(Component* parent_);
-	TransformComponent(Component* parent_,Vec3 pos_, Quaternion orientation_, Vec3 scale_ = Vec3(1.0f, 1.0f, 1.0f));
+	TransformComponent(Component* parent_, Vec3 pos_, Quaternion orientation_, Vec3 scale_ = Vec3(1.0f, 1.0f, 1.0f));
 	~TransformComponent();
 	bool OnCreate();
 	void OnDestroy();
@@ -23,7 +23,7 @@ public:
 	Vec3 GetScale() { return scale; }
 	Quaternion GetQuaternion() { return orientation; }
 	Matrix4 GetTransformMatrix() const;
-	void SetTransform(Vec3 pos_, Quaternion orientation_, Vec3 scale_ = Vec3(1.0f, 1.0f, 1.0f) ) {
+	void SetTransform(Vec3 pos_, Quaternion orientation_, Vec3 scale_ = Vec3(1.0f, 1.0f, 1.0f)) {
 		pos = pos_;
 		orientation = orientation_;
 		scale = scale_;
@@ -31,4 +31,3 @@ public:
 
 
 };
-

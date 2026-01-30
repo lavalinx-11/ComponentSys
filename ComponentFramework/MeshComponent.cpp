@@ -67,7 +67,7 @@ void MeshComponent::LoadModel(const char* filename) {
 
             Vec2 uvCoord{};
             uvCoord.x = attrib.texcoords[2 * index.texcoord_index + 0];
-            uvCoord.y = -attrib.texcoords[2 * index.texcoord_index + 1];
+            uvCoord.y = attrib.texcoords[2 * index.texcoord_index + 1];
 
             vertices.push_back(vertex);
             normals.push_back(normal);
