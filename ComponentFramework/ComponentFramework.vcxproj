@@ -176,6 +176,7 @@
     <ClInclude Include="Scene.h" />
     <ClInclude Include="Scene0g.h" />
     <ClInclude Include="ShaderComponent.h" />
+    <ClInclude Include="SkyboxComponent.h" />
     <ClInclude Include="TextureComponent.h" />
     <ClInclude Include="Timer.h" />
     <ClInclude Include="tiny_obj_loader.h" />
