@@ -23,7 +23,6 @@ class MeshComponent : public Component
 
 		/// Private helper methods
 		void LoadModel(const char* filename);
-		void StoreMeshData(GLenum drawmode_);
-		
+		void StoreMeshData(GLenum drawmode_); 
 };
 

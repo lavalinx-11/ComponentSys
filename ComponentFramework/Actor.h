@@ -3,6 +3,8 @@
 #include <iostream>
 #include "Component.h"
 #include "TransformComponent.h"
+#include <MMath.h>
+
 class Actor : public Component {
 	Actor(const Actor&) = delete;
 	Actor(Actor&&) = delete;
@@ -49,6 +51,7 @@ public:
 		}
 	}
 
+	Matrix4 GetModelMatrix();
 	void ListComponents() const;
 	void RemoveAllComponents();
 };

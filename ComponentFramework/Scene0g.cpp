@@ -34,25 +34,36 @@ bool Scene0g::OnCreate() {
 	camera->OnCreate();
 	camera->setCamMovement(true);
 
-	actor = new Actor(nullptr);
+
+	
+	//Quaternion rot = QMath::angleAxisRotation(-90.0f, Vec3(1.0f, 0.0f, 0.0f));
+	//actor->GetComponent<TransformComponent>()->SetOrientation(actor->GetComponent<TransformComponent>()->GetOrientation() *= rot);
+
+	board = new Actor(nullptr);
+	board->AddComponent<MaterialComponent>(nullptr, "textures/8x8_board_red.png");
+	board->AddComponent<MeshComponent>(nullptr, "meshes/Plane.obj");
+	board->AddComponent<ShaderComponent>(nullptr, "shaders/texturePhongVert.glsl", "shaders/texturePhongFrag.glsl");
+	board->AddComponent<TransformComponent>(nullptr, Vec3(0.0f, -2.0f, 0.0f),QMath::angleAxisRotation(-90.0f, Vec3(1.0f, 0.0f,0.0f)));
+	board->OnCreate();
+	
+
+	Quaternion up90 = QMath::angleAxisRotation(-90.0f, Vec3(1.0f, 0.0f, 0.0f));
+	Quaternion turn180 = QMath::angleAxisRotation(180.0f, Vec3(0.0f, 1.0f, 0.0f));
+	Quaternion combinedRotation = turn180 * up90;
+
+	actor = new Actor(board);
 	actor->AddComponent<MaterialComponent>(nullptr, "textures/mario_main.png");
 	actor->AddComponent<MeshComponent>(nullptr, "meshes/Mario.obj");
 	actor->AddComponent<ShaderComponent>(nullptr, "shaders/texturePhongVert.glsl", "shaders/texturePhongFrag.glsl");
-	actor->AddComponent<TransformComponent>(nullptr, Vec3(0.0f, 0.0f, 0.0f), Quaternion(0.0f,(Vec3(0.0f, 1.0f, 0.0f))));
-	actor->OnCreate(); 
+	actor->AddComponent<TransformComponent>(nullptr, Vec3(0.0f, 0.0f, 1.25f),combinedRotation);
+	actor->OnCreate();
 	actor->ListComponents();
-
-	/*actor = new Actor(nullptr);
-	actor->AddComponent<MaterialComponent>(nullptr, "textures/mario_main.jpg");
-	actor->AddComponent<MeshComponent>(nullptr, "meshes/Mario.obj");
-	actor->AddComponent<ShaderComponent>(nullptr, "shaders/texturePhongVert.glsl", "shaders/texturePhongFrag.glsl");
-	actor->AddComponent<TransformComponent>(nullptr, Vec3(0.0f, -1.0f, -5.0f), QMath::angleAxisRotation(15.0f, Vec3(1.0f, 0.0f,0.0f)),Vec3(0.0f, 1.0f, 0.0f));
-	actor->OnCreate();*/
 	return true;
 }
 
 void Scene0g::OnDestroy() {
 	actor->OnDestroy();
+	board->OnDestroy();
 	camera->OnDestroy();
 	window->OnDestroy();
 	delete window;
@@ -63,7 +74,25 @@ void Scene0g::HandleEvents(const SDL_Event &sdlEvent) {
 	switch( sdlEvent.type ) {
     case SDL_EVENT_KEY_DOWN:
 		switch (sdlEvent.key.scancode) {
-			
+		case SDL_SCANCODE_J:
+		{
+			/*Quaternion rota = QMath::angleAxisRotation(-45.0f, Vec3(0.0f, 1.0f, 0.0f));
+			board->GetComponent<TransformComponent>()->SetOrientation(board->GetComponent<TransformComponent>()->GetOrientation() *= rota);*/
+			Vec3 speed = Vec3(0.0f, 0.0f, 1.0f);
+			board->GetComponent<TransformComponent>()->setPosition(board->GetComponent<TransformComponent>()->GetPosition() + speed); 
+
+			break;
+		}
+		case SDL_SCANCODE_K:
+		{
+			/*Quaternion rota = QMath::angleAxisRotation(45.0f, Vec3(0.0f, 1.0f, 0.0f));
+			board->GetComponent<TransformComponent>()->SetOrientation(board->GetComponent<TransformComponent>()->GetOrientation() *= rota);*/
+			Vec3 speed = Vec3(0.0f, 0.0f, -1.0f);
+			board->GetComponent<TransformComponent>()->setPosition(board->GetComponent<TransformComponent>()->GetPosition() + speed);
+
+			break;
+		}
+
 		}
 		break;
 
@@ -102,7 +131,6 @@ void Scene0g::RenderGUI()
 }
 
 void Scene0g::Update(const float deltaTime) {
-	std::cout << deltaTime << std::endl;
 	camera->Update(deltaTime);
 }
 
@@ -117,7 +145,13 @@ void Scene0g::Render() const {
 	glUseProgram(shader->GetProgram());
 	glUniformMatrix4fv(static_cast<GLint>(shader->GetUniformID("projectionMatrix")), 1, GL_FALSE, camera->GetProjectionMatrix());
 	glUniformMatrix4fv(static_cast<GLint>(shader->GetUniformID("viewMatrix")), 1, GL_FALSE, camera->GetViewMatrix());
-	glUniformMatrix4fv(static_cast<GLint>(shader->GetUniformID("modelMatrix")), 1, GL_FALSE,actor->GetComponent<TransformComponent>()->GetTransformMatrix());
+
+	
+	glUniformMatrix4fv(static_cast<GLint>(shader->GetUniformID("modelMatrix")), 1, GL_FALSE, board->GetComponent<TransformComponent>()->GetTransformMatrix());
+	glBindTexture(GL_TEXTURE_2D, board->GetComponent<MaterialComponent>()->getTextureID());
+	board->GetComponent<MeshComponent>()->Render();
+
+	glUniformMatrix4fv(static_cast<GLint>(shader->GetUniformID("modelMatrix")), 1, GL_FALSE, actor->GetModelMatrix());
 	glBindTexture(GL_TEXTURE_2D, actor->GetComponent<MaterialComponent>()->getTextureID());
 	actor->GetComponent<MeshComponent>()->Render();
 	glBindTexture(GL_TEXTURE_2D, 0);

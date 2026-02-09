@@ -47,15 +47,20 @@ void Actor::ListComponents() const {
 	std::cout << '\n';
 }
 
-//Matrix4 Actor::GetModelMatrix() {
-//	Ref<TransformComponent> transform = GetComponent<TransformComponent>();
-//	if (transform.get()) {
-//		modelMatrix = transform->GetTransformMatrix();
-//	} else {
-//		modelMatrix.loadIdentity();
-//	}
-//	if (parent) {
-//		modelMatrix = dynamic_cast<Actor*>(parent)->GetModelMatrix() * modelMatrix;
-//	}
-//	return modelMatrix;
-//}
+Matrix4 Actor::GetModelMatrix() {
+	Matrix4 modelMatrix;
+	
+	TransformComponent* transform = GetComponent<TransformComponent>();
+	if (transform != nullptr) {
+		modelMatrix = transform->GetTransformMatrix();
+	}
+	else {
+		modelMatrix.loadIdentity();
+	}
+	if (parent != nullptr) { 
+		transform = dynamic_cast<Actor*>(parent)->GetComponent<TransformComponent>();
+		modelMatrix = dynamic_cast<Actor*>(parent)->GetModelMatrix() * modelMatrix;
+	}
+	return modelMatrix;
+}
+

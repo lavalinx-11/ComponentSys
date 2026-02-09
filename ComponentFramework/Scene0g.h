@@ -12,7 +12,8 @@ union SDL_Event;
 
 class Scene0g : public Scene {
 private:
-	Actor * actor;
+	Actor* actor;
+	Actor* board;
 	CameraActor* camera;
 	bool drawInWireMode;
 	bool showImGuiDemoWindow = true; // optional for testing
