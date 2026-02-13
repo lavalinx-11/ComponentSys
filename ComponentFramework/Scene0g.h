@@ -4,6 +4,7 @@
 #include "Vector.h"
 #include <Matrix.h>
 #include "Actor.h"
+#include <unordered_map>
 #include "CameraActor.h"
 #include "Window.h"
 /// Forward declarations 
@@ -15,6 +16,9 @@ private:
 	Actor* actor;
 	Actor* board;
 	CameraActor* camera;
+	std::unordered_map<std::string, Actor*> actors; // Map to store actors by name
+	std::string actorName; 
+	std::string actorColour;
 	bool drawInWireMode;
 	bool showImGuiDemoWindow = true; // optional for testing
 	char textBuffer[256] = "";       // input text buffer

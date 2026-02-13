@@ -99,7 +99,7 @@ bool CameraActor::OnCreate() {
 		if (!canCamMove) return;
 
 		const bool* keys = SDL_GetKeyboardState(nullptr);
-		float moveSpeed = 5.0f * deltaTime;
+		float moveSpeed = 9.0f * deltaTime;
 
 		// 1. Create a direction vector to accumulate movement
 		Vec3 moveDir(0.0f, 0.0f, 0.0f);

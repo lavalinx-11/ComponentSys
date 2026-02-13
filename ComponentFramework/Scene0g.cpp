@@ -1,5 +1,6 @@
 #include <glew.h>
 #include <iostream>
+#include <cstdlib>
 #include <SDL3/SDL.h>
 #include "Scene0g.h"
 #include <MMath.h>
@@ -43,26 +44,74 @@ bool Scene0g::OnCreate() {
 	board->AddComponent<MaterialComponent>(nullptr, "textures/8x8_board_red.png");
 	board->AddComponent<MeshComponent>(nullptr, "meshes/Plane.obj");
 	board->AddComponent<ShaderComponent>(nullptr, "shaders/texturePhongVert.glsl", "shaders/texturePhongFrag.glsl");
-	board->AddComponent<TransformComponent>(nullptr, Vec3(0.0f, -2.0f, 0.0f),QMath::angleAxisRotation(-90.0f, Vec3(1.0f, 0.0f,0.0f)));
+	board->AddComponent<TransformComponent>(nullptr, Vec3(0.0f, 0.0f, 0.0f), QMath::angleAxisRotation(-90.0f, Vec3(1.0f, 0.0f, 0.0f)));
+	board->GetComponent<TransformComponent>()->SetScale(Vec3(5.0f, 5.0f, 5.0f));
 	board->OnCreate();
+
+
+
+
+	for (int i = 0; i < 32; i++) {
+		Actor* actorNew = new Actor(board);
+
+		actorNew->AddComponent<MeshComponent>(nullptr, "meshes/CheckerPiece.obj");
+		actorNew->AddComponent<ShaderComponent>(nullptr, "shaders/texturePhongVert.glsl", "shaders/texturePhongFrag.glsl");
+		actorNew->AddComponent<TransformComponent>(nullptr, Vec3(-4.4f, -4.4f, 0.0f), Quaternion(), Vec3(0.125f, 0.125f, 0.125f));
+		if (i < 16) {
+			actorNew->AddComponent<MaterialComponent>(nullptr, "textures/blackCheckerPiece.png");
+			actorColour = "BlackActor";
+		}
+		else {
+			actorNew->AddComponent<MaterialComponent>(nullptr, "textures/redCheckerPiece.png");
+			actorColour = "RedActor";
+		}
+		actorNew->OnCreate();
+		actorName = actorColour + std::to_string(i);
+		actors.emplace(actorName, std::move(actorNew));
+	}
+
+	for (int i = 0; i < actors.size(); i++) {
+		Vec3 startingPosBlack = Vec3(-4.4f, 3.15f, 0.0f); 
+		Vec3 startingPosRed = Vec3(-4.4f, -6.85f, 0.0f);
+		int row = i / 8; 
+		int col = i % 8; 
+		float actorOffset = 1.25f; // Offset to position actors within the grid cells
+		Vec3 actorPosBlack;
+		actorPosBlack.x = startingPosBlack.x + (actorOffset * col); // Position based on column
+		actorPosBlack.y = startingPosBlack.y + (actorOffset * row); // Position based on row
+
+		Vec3 actorPosRed;
+		actorPosRed.x = startingPosRed.x + (actorOffset * col); // Position based on column
+		actorPosRed.y = startingPosRed.y + (actorOffset * row); // Position based on row
+		if (i < 16) {
+			actors.at("BlackActor" + std::to_string(i))->GetComponent<TransformComponent>()->setPosition(actorPosBlack);
+		}
+		else   {
+			actors.at("RedActor" + std::to_string(i))->GetComponent<TransformComponent>()->setPosition(actorPosRed);
+		}
+	}
+
+
 	
 
-	Quaternion up90 = QMath::angleAxisRotation(-90.0f, Vec3(1.0f, 0.0f, 0.0f));
-	Quaternion turn180 = QMath::angleAxisRotation(180.0f, Vec3(0.0f, 1.0f, 0.0f));
-	Quaternion combinedRotation = turn180 * up90;
-
-	actor = new Actor(board);
-	actor->AddComponent<MaterialComponent>(nullptr, "textures/mario_main.png");
-	actor->AddComponent<MeshComponent>(nullptr, "meshes/Mario.obj");
-	actor->AddComponent<ShaderComponent>(nullptr, "shaders/texturePhongVert.glsl", "shaders/texturePhongFrag.glsl");
-	actor->AddComponent<TransformComponent>(nullptr, Vec3(0.0f, 0.0f, 1.25f),combinedRotation);
-	actor->OnCreate();
-	actor->ListComponents();
+	
 	return true;
 }
 
 void Scene0g::OnDestroy() {
-	actor->OnDestroy();
+	for (int i = 0; i < actors.size(); i++) {
+		if (i < 16) {
+			std::string name = "BlackActor" + std::to_string(i);
+			actors.at(name)->OnDestroy();
+			delete actors.at(name);
+		}
+
+		else {
+			std::string name = "RedActor" + std::to_string(i);
+			actors.at(name)->OnDestroy();
+			delete actors.at(name);
+		}
+	}
 	board->OnDestroy();
 	camera->OnDestroy();
 	window->OnDestroy();
@@ -140,7 +189,9 @@ void Scene0g::Render() const {
 
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
-	ShaderComponent* shader = actor->GetComponent<ShaderComponent>();
+
+
+	ShaderComponent* shader = board->GetComponent<ShaderComponent>();
 
 	glUseProgram(shader->GetProgram());
 	glUniformMatrix4fv(static_cast<GLint>(shader->GetUniformID("projectionMatrix")), 1, GL_FALSE, camera->GetProjectionMatrix());
@@ -151,9 +202,23 @@ void Scene0g::Render() const {
 	glBindTexture(GL_TEXTURE_2D, board->GetComponent<MaterialComponent>()->getTextureID());
 	board->GetComponent<MeshComponent>()->Render();
 
-	glUniformMatrix4fv(static_cast<GLint>(shader->GetUniformID("modelMatrix")), 1, GL_FALSE, actor->GetModelMatrix());
-	glBindTexture(GL_TEXTURE_2D, actor->GetComponent<MaterialComponent>()->getTextureID());
-	actor->GetComponent<MeshComponent>()->Render();
+	
+	for (int i = 0; i < actors.size(); i++) {
+		if (i < 16) {
+			std::string name = "BlackActor" + std::to_string(i);
+			glUniformMatrix4fv(static_cast<GLint>(shader->GetUniformID("modelMatrix")), 1, GL_FALSE, actors.at(name)->GetModelMatrix());
+			glBindTexture(GL_TEXTURE_2D, actors.at(name)->GetComponent<MaterialComponent>()->getTextureID());
+			actors.at(name)->GetComponent<MeshComponent>()->Render();
+		}
+		else {
+			std::string name = "RedActor" + std::to_string(i);
+			glUniformMatrix4fv(static_cast<GLint>(shader->GetUniformID("modelMatrix")), 1, GL_FALSE, actors.at(name)->GetModelMatrix());
+			glBindTexture(GL_TEXTURE_2D, actors.at(name)->GetComponent<MaterialComponent>()->getTextureID());
+			actors.at(name)->GetComponent<MeshComponent>()->Render();
+		}
+	}
+
+
 	glBindTexture(GL_TEXTURE_2D, 0);
 	glUseProgram(0);
 	

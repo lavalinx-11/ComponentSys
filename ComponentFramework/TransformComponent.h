@@ -31,6 +31,7 @@ public:
 		orientation = orientation_;
 		scale = scale_;
 	}
+	void SetScale(Vec3 scale_) { scale = scale_; }
 
 
 };
