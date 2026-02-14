@@ -1,339 +1,275 @@
-Fri Feb 13 15:27:08 2026
+Fri Feb 13 20:39:53 2026
 [INFO]: Starting the SceneManager
-[INFO]: OpenGL version: 4.6.0 NVIDIA 591.44
-[INFO]: Graphics card vendor: NVIDIA Corporation
-[INFO]: Graphics card name: NVIDIA GeForce RTX 3050 Laptop GPU/PCIe/SSE2
-[INFO]: GLSL Version: 4.60 NVIDIA
+[INFO]: OpenGL version: 4.6.0 Compatibility Profile Context 26.1.1.251223
+[INFO]: Graphics card vendor: ATI Technologies Inc.
+[INFO]: Graphics card name: AMD Radeon RX 9060 XT
+[INFO]: GLSL Version: 4.60
 [INFO]: Created Scene0: 
 [INFO]: Loading assets for Actor: 
 [INFO]: Uniforms:
-"lightPos" loc:0
 "modelMatrix" loc:1
-"myTexture" loc:2
-"projectionMatrix" loc:3
-"viewMatrix" loc:4
+"viewMatrix" loc:10
+"lightPos" loc:0
+"projectionMatrix" loc:6
+"myTexture" loc:5
 
 [INFO]: Loading assets for Actor: 
 [INFO]: Uniforms:
-"lightPos" loc:0
 "modelMatrix" loc:1
-"myTexture" loc:2
-"projectionMatrix" loc:3
-"viewMatrix" loc:4
+"viewMatrix" loc:10
+"lightPos" loc:0
+"projectionMatrix" loc:6
+"myTexture" loc:5
 
 [INFO]: Loading assets for Actor: 
 [INFO]: Uniforms:
-"lightPos" loc:0
 "modelMatrix" loc:1
-"myTexture" loc:2
-"projectionMatrix" loc:3
-"viewMatrix" loc:4
+"viewMatrix" loc:10
+"lightPos" loc:0
+"projectionMatrix" loc:6
+"myTexture" loc:5
 
 [INFO]: Loading assets for Actor: 
 [INFO]: Uniforms:
-"lightPos" loc:0
 "modelMatrix" loc:1
-"myTexture" loc:2
-"projectionMatrix" loc:3
-"viewMatrix" loc:4
+"viewMatrix" loc:10
+"lightPos" loc:0
+"projectionMatrix" loc:6
+"myTexture" loc:5
 
 [INFO]: Loading assets for Actor: 
 [INFO]: Uniforms:
-"lightPos" loc:0
 "modelMatrix" loc:1
-"myTexture" loc:2
-"projectionMatrix" loc:3
-"viewMatrix" loc:4
+"viewMatrix" loc:10
+"lightPos" loc:0
+"projectionMatrix" loc:6
+"myTexture" loc:5
 
 [INFO]: Loading assets for Actor: 
 [INFO]: Uniforms:
-"lightPos" loc:0
 "modelMatrix" loc:1
-"myTexture" loc:2
-"projectionMatrix" loc:3
-"viewMatrix" loc:4
+"viewMatrix" loc:10
+"lightPos" loc:0
+"projectionMatrix" loc:6
+"myTexture" loc:5
 
 [INFO]: Loading assets for Actor: 
 [INFO]: Uniforms:
-"lightPos" loc:0
 "modelMatrix" loc:1
-"myTexture" loc:2
-"projectionMatrix" loc:3
-"viewMatrix" loc:4
+"viewMatrix" loc:10
+"lightPos" loc:0
+"projectionMatrix" loc:6
+"myTexture" loc:5
 
 [INFO]: Loading assets for Actor: 
 [INFO]: Uniforms:
-"lightPos" loc:0
 "modelMatrix" loc:1
-"myTexture" loc:2
-"projectionMatrix" loc:3
-"viewMatrix" loc:4
+"viewMatrix" loc:10
+"lightPos" loc:0
+"projectionMatrix" loc:6
+"myTexture" loc:5
 
 [INFO]: Loading assets for Actor: 
 [INFO]: Uniforms:
-"lightPos" loc:0
 "modelMatrix" loc:1
-"myTexture" loc:2
-"projectionMatrix" loc:3
-"viewMatrix" loc:4
+"viewMatrix" loc:10
+"lightPos" loc:0
+"projectionMatrix" loc:6
+"myTexture" loc:5
 
 [INFO]: Loading assets for Actor: 
 [INFO]: Uniforms:
-"lightPos" loc:0
 "modelMatrix" loc:1
-"myTexture" loc:2
-"projectionMatrix" loc:3
-"viewMatrix" loc:4
+"viewMatrix" loc:10
+"lightPos" loc:0
+"projectionMatrix" loc:6
+"myTexture" loc:5
 
 [INFO]: Loading assets for Actor: 
 [INFO]: Uniforms:
-"lightPos" loc:0
 "modelMatrix" loc:1
-"myTexture" loc:2
-"projectionMatrix" loc:3
-"viewMatrix" loc:4
+"viewMatrix" loc:10
+"lightPos" loc:0
+"projectionMatrix" loc:6
+"myTexture" loc:5
 
 [INFO]: Loading assets for Actor: 
 [INFO]: Uniforms:
-"lightPos" loc:0
 "modelMatrix" loc:1
-"myTexture" loc:2
-"projectionMatrix" loc:3
-"viewMatrix" loc:4
+"viewMatrix" loc:10
+"lightPos" loc:0
+"projectionMatrix" loc:6
+"myTexture" loc:5
 
 [INFO]: Loading assets for Actor: 
 [INFO]: Uniforms:
-"lightPos" loc:0
 "modelMatrix" loc:1
-"myTexture" loc:2
-"projectionMatrix" loc:3
-"viewMatrix" loc:4
+"viewMatrix" loc:10
+"lightPos" loc:0
+"projectionMatrix" loc:6
+"myTexture" loc:5
 
 [INFO]: Loading assets for Actor: 
 [INFO]: Uniforms:
-"lightPos" loc:0
 "modelMatrix" loc:1
-"myTexture" loc:2
-"projectionMatrix" loc:3
-"viewMatrix" loc:4
+"viewMatrix" loc:10
+"lightPos" loc:0
+"projectionMatrix" loc:6
+"myTexture" loc:5
 
 [INFO]: Loading assets for Actor: 
 [INFO]: Uniforms:
-"lightPos" loc:0
 "modelMatrix" loc:1
-"myTexture" loc:2
-"projectionMatrix" loc:3
-"viewMatrix" loc:4
+"viewMatrix" loc:10
+"lightPos" loc:0
+"projectionMatrix" loc:6
+"myTexture" loc:5
 
 [INFO]: Loading assets for Actor: 
 [INFO]: Uniforms:
-"lightPos" loc:0
 "modelMatrix" loc:1
-"myTexture" loc:2
-"projectionMatrix" loc:3
-"viewMatrix" loc:4
+"viewMatrix" loc:10
+"lightPos" loc:0
+"projectionMatrix" loc:6
+"myTexture" loc:5
 
 [INFO]: Loading assets for Actor: 
 [INFO]: Uniforms:
-"lightPos" loc:0
 "modelMatrix" loc:1
-"myTexture" loc:2
-"projectionMatrix" loc:3
-"viewMatrix" loc:4
+"viewMatrix" loc:10
+"lightPos" loc:0
+"projectionMatrix" loc:6
+"myTexture" loc:5
 
 [INFO]: Loading assets for Actor: 
 [INFO]: Uniforms:
-"lightPos" loc:0
 "modelMatrix" loc:1
-"myTexture" loc:2
-"projectionMatrix" loc:3
-"viewMatrix" loc:4
+"viewMatrix" loc:10
+"lightPos" loc:0
+"projectionMatrix" loc:6
+"myTexture" loc:5
 
 [INFO]: Loading assets for Actor: 
 [INFO]: Uniforms:
-"lightPos" loc:0
 "modelMatrix" loc:1
-"myTexture" loc:2
-"projectionMatrix" loc:3
-"viewMatrix" loc:4
+"viewMatrix" loc:10
+"lightPos" loc:0
+"projectionMatrix" loc:6
+"myTexture" loc:5
 
 [INFO]: Loading assets for Actor: 
 [INFO]: Uniforms:
-"lightPos" loc:0
 "modelMatrix" loc:1
-"myTexture" loc:2
-"projectionMatrix" loc:3
-"viewMatrix" loc:4
+"viewMatrix" loc:10
+"lightPos" loc:0
+"projectionMatrix" loc:6
+"myTexture" loc:5
 
 [INFO]: Loading assets for Actor: 
 [INFO]: Uniforms:
-"lightPos" loc:0
 "modelMatrix" loc:1
-"myTexture" loc:2
-"projectionMatrix" loc:3
-"viewMatrix" loc:4
+"viewMatrix" loc:10
+"lightPos" loc:0
+"projectionMatrix" loc:6
+"myTexture" loc:5
 
 [INFO]: Loading assets for Actor: 
 [INFO]: Uniforms:
-"lightPos" loc:0
 "modelMatrix" loc:1
-"myTexture" loc:2
-"projectionMatrix" loc:3
-"viewMatrix" loc:4
+"viewMatrix" loc:10
+"lightPos" loc:0
+"projectionMatrix" loc:6
+"myTexture" loc:5
 
 [INFO]: Loading assets for Actor: 
 [INFO]: Uniforms:
-"lightPos" loc:0
 "modelMatrix" loc:1
-"myTexture" loc:2
-"projectionMatrix" loc:3
-"viewMatrix" loc:4
+"viewMatrix" loc:10
+"lightPos" loc:0
+"projectionMatrix" loc:6
+"myTexture" loc:5
 
 [INFO]: Loading assets for Actor: 
 [INFO]: Uniforms:
-"lightPos" loc:0
 "modelMatrix" loc:1
-"myTexture" loc:2
-"projectionMatrix" loc:3
-"viewMatrix" loc:4
+"viewMatrix" loc:10
+"lightPos" loc:0
+"projectionMatrix" loc:6
+"myTexture" loc:5
 
 [INFO]: Loading assets for Actor: 
 [INFO]: Uniforms:
-"lightPos" loc:0
 "modelMatrix" loc:1
-"myTexture" loc:2
-"projectionMatrix" loc:3
-"viewMatrix" loc:4
+"viewMatrix" loc:10
+"lightPos" loc:0
+"projectionMatrix" loc:6
+"myTexture" loc:5
 
 [INFO]: Loading assets for Actor: 
 [INFO]: Uniforms:
-"lightPos" loc:0
 "modelMatrix" loc:1
-"myTexture" loc:2
-"projectionMatrix" loc:3
-"viewMatrix" loc:4
+"viewMatrix" loc:10
+"lightPos" loc:0
+"projectionMatrix" loc:6
+"myTexture" loc:5
 
 [INFO]: Loading assets for Actor: 
 [INFO]: Uniforms:
-"lightPos" loc:0
 "modelMatrix" loc:1
-"myTexture" loc:2
-"projectionMatrix" loc:3
-"viewMatrix" loc:4
+"viewMatrix" loc:10
+"lightPos" loc:0
+"projectionMatrix" loc:6
+"myTexture" loc:5
 
 [INFO]: Loading assets for Actor: 
 [INFO]: Uniforms:
-"lightPos" loc:0
 "modelMatrix" loc:1
-"myTexture" loc:2
-"projectionMatrix" loc:3
-"viewMatrix" loc:4
+"viewMatrix" loc:10
+"lightPos" loc:0
+"projectionMatrix" loc:6
+"myTexture" loc:5
 
 [INFO]: Loading assets for Actor: 
 [INFO]: Uniforms:
-"lightPos" loc:0
 "modelMatrix" loc:1
-"myTexture" loc:2
-"projectionMatrix" loc:3
-"viewMatrix" loc:4
+"viewMatrix" loc:10
+"lightPos" loc:0
+"projectionMatrix" loc:6
+"myTexture" loc:5
 
 [INFO]: Loading assets for Actor: 
 [INFO]: Uniforms:
-"lightPos" loc:0
 "modelMatrix" loc:1
-"myTexture" loc:2
-"projectionMatrix" loc:3
-"viewMatrix" loc:4
+"viewMatrix" loc:10
+"lightPos" loc:0
+"projectionMatrix" loc:6
+"myTexture" loc:5
 
 [INFO]: Loading assets for Actor: 
 [INFO]: Uniforms:
-"lightPos" loc:0
 "modelMatrix" loc:1
-"myTexture" loc:2
-"projectionMatrix" loc:3
-"viewMatrix" loc:4
+"viewMatrix" loc:10
+"lightPos" loc:0
+"projectionMatrix" loc:6
+"myTexture" loc:5
 
 [INFO]: Loading assets for Actor: 
 [INFO]: Uniforms:
-"lightPos" loc:0
 "modelMatrix" loc:1
-"myTexture" loc:2
-"projectionMatrix" loc:3
-"viewMatrix" loc:4
+"viewMatrix" loc:10
+"lightPos" loc:0
+"projectionMatrix" loc:6
+"myTexture" loc:5
 
 [INFO]: Loading assets for Actor: 
 [INFO]: Uniforms:
-"lightPos" loc:0
 "modelMatrix" loc:1
-"myTexture" loc:2
-"projectionMatrix" loc:3
-"viewMatrix" loc:4
+"viewMatrix" loc:10
+"lightPos" loc:0
+"projectionMatrix" loc:6
+"myTexture" loc:5
 
 [INFO]: Deleting the SceneManager
-[INFO]: Deleting assets for Actor: 
-[INFO]: Deleting assets for Actor: 
-[INFO]: Deleting assets for Actor: 
-[INFO]: Deleting assets for Actor: 
-[INFO]: Deleting assets for Actor: 
-[INFO]: Deleting assets for Actor: 
-[INFO]: Deleting assets for Actor: 
-[INFO]: Deleting assets for Actor: 
-[INFO]: Deleting assets for Actor: 
-[INFO]: Deleting assets for Actor: 
-[INFO]: Deleting assets for Actor: 
-[INFO]: Deleting assets for Actor: 
-[INFO]: Deleting assets for Actor: 
-[INFO]: Deleting assets for Actor: 
-[INFO]: Deleting assets for Actor: 
-[INFO]: Deleting assets for Actor: 
-[INFO]: Deleting assets for Actor: 
-[INFO]: Deleting assets for Actor: 
-[INFO]: Deleting assets for Actor: 
-[INFO]: Deleting assets for Actor: 
-[INFO]: Deleting assets for Actor: 
-[INFO]: Deleting assets for Actor: 
-[INFO]: Deleting assets for Actor: 
-[INFO]: Deleting assets for Actor: 
-[INFO]: Deleting assets for Actor: 
-[INFO]: Deleting assets for Actor: 
-[INFO]: Deleting assets for Actor: 
-[INFO]: Deleting assets for Actor: 
-[INFO]: Deleting assets for Actor: 
-[INFO]: Deleting assets for Actor: 
-[INFO]: Deleting assets for Actor: 
-[INFO]: Deleting assets for Actor: 
-[INFO]: Deleting assets for Actor: 
-[INFO]: Deleting assets for Actor: 
-[INFO]: Deleting assets for Actor: 
-[INFO]: Deleting assets for Actor: 
-[INFO]: Deleting assets for Actor: 
-[INFO]: Deleting assets for Actor: 
-[INFO]: Deleting assets for Actor: 
-[INFO]: Deleting assets for Actor: 
-[INFO]: Deleting assets for Actor: 
-[INFO]: Deleting assets for Actor: 
-[INFO]: Deleting assets for Actor: 
-[INFO]: Deleting assets for Actor: 
-[INFO]: Deleting assets for Actor: 
-[INFO]: Deleting assets for Actor: 
-[INFO]: Deleting assets for Actor: 
-[INFO]: Deleting assets for Actor: 
-[INFO]: Deleting assets for Actor: 
-[INFO]: Deleting assets for Actor: 
-[INFO]: Deleting assets for Actor: 
-[INFO]: Deleting assets for Actor: 
-[INFO]: Deleting assets for Actor: 
-[INFO]: Deleting assets for Actor: 
-[INFO]: Deleting assets for Actor: 
-[INFO]: Deleting assets for Actor: 
-[INFO]: Deleting assets for Actor: 
-[INFO]: Deleting assets for Actor: 
-[INFO]: Deleting assets for Actor: 
-[INFO]: Deleting assets for Actor: 
-[INFO]: Deleting assets for Actor: 
-[INFO]: Deleting assets for Actor: 
-[INFO]: Deleting assets for Actor: 
-[INFO]: Deleting assets for Actor: 
 [INFO]: Deleting assets for Actor: 
 [INFO]: Deleting assets for Actor: 
 [INFO]: Deleted Scene0: 

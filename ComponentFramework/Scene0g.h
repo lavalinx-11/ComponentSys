@@ -19,6 +19,9 @@ private:
 	std::unordered_map<std::string, Actor*> actors; // Map to store actors by name
 	std::string actorName; 
 	std::string actorColour;
+	std::string actorType;
+	std::vector<Actor*> allPieces;   
+	std::vector<Actor*> knightPieces; 
 	bool drawInWireMode;
 	bool showImGuiDemoWindow = true; // optional for testing
 	char textBuffer[256] = "";       // input text buffer
@@ -36,7 +39,8 @@ public:
 	virtual void Render() const override;
 	virtual void HandleEvents(const SDL_Event &sdlEvent) override;
 	virtual void RenderGUI() override;
-
+	void RenderAll();
+	void RotateKnights(float angleDegrees);
 };
 
 

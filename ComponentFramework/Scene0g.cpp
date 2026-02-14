@@ -36,10 +36,6 @@ bool Scene0g::OnCreate() {
 	camera->setCamMovement(true);
 
 
-	
-	//Quaternion rot = QMath::angleAxisRotation(-90.0f, Vec3(1.0f, 0.0f, 0.0f));
-	//actor->GetComponent<TransformComponent>()->SetOrientation(actor->GetComponent<TransformComponent>()->GetOrientation() *= rot);
-
 	board = new Actor(nullptr);
 	board->AddComponent<MaterialComponent>(nullptr, "textures/8x8_board_red.png");
 	board->AddComponent<MeshComponent>(nullptr, "meshes/Plane.obj");
@@ -49,40 +45,68 @@ bool Scene0g::OnCreate() {
 	board->OnCreate();
 
 
+	std::string pieceMeshes[] = {
+	"meshes/Rook.obj", "meshes/Knight.obj", "meshes/Bishop.obj", "meshes/Queen.obj",
+	"meshes/King.obj", "meshes/Bishop.obj", "meshes/Knight.obj", "meshes/Rook.obj",
+	"meshes/Pawn.obj", "meshes/Pawn.obj", "meshes/Pawn.obj", "meshes/Pawn.obj",
+	"meshes/Pawn.obj", "meshes/Pawn.obj", "meshes/Pawn.obj", "meshes/Pawn.obj"
+	};
 
+
+	std::string pieceTypes[] = {
+	"Rook", "Knight", "Bishop", "Queen", "King", "Bishop", "Knight", "Rook"
+	};
+
+	
 
 	for (int i = 0; i < 32; i++) {
+		int pieceIndex = i % 16; // Index to determine the type of piece 
+		std::string meshPath = pieceMeshes[pieceIndex];
 		Actor* actorNew = new Actor(board);
 
-		actorNew->AddComponent<MeshComponent>(nullptr, "meshes/CheckerPiece.obj");
+		actorNew->AddComponent<MeshComponent>(nullptr, meshPath.c_str());
+		std::string type = (pieceIndex < 8) ? pieceTypes[pieceIndex] : "Pawn";
 		actorNew->AddComponent<ShaderComponent>(nullptr, "shaders/texturePhongVert.glsl", "shaders/texturePhongFrag.glsl");
 		actorNew->AddComponent<TransformComponent>(nullptr, Vec3(-4.4f, -4.4f, 0.0f), Quaternion(), Vec3(0.125f, 0.125f, 0.125f));
+		Quaternion rot = QMath::angleAxisRotation(90.0f, Vec3(1.0f, 0.0f, 0.0f));
+		actorNew->GetComponent<TransformComponent>()->SetOrientation(actorNew->GetComponent<TransformComponent>()->GetOrientation() *= rot);
+		
 		if (i < 16) {
-			actorNew->AddComponent<MaterialComponent>(nullptr, "textures/blackCheckerPiece.png");
+			actorNew->AddComponent<MaterialComponent>(nullptr, "textures/BlackChessPiece.png");
 			actorColour = "BlackActor";
 		}
 		else {
-			actorNew->AddComponent<MaterialComponent>(nullptr, "textures/redCheckerPiece.png");
+			actorNew->AddComponent<MaterialComponent>(nullptr, "textures/WhiteChessPiece.png");
 			actorColour = "RedActor";
 		}
+
 		actorNew->OnCreate();
+		allPieces.push_back(actorNew);
+		if (type == "Knight" && actorColour == "RedActor") {
+			Quaternion extraRot = QMath::angleAxisRotation(180, Vec3(0.0f, 0.0f, 1.0f));
+			actorNew->GetComponent<TransformComponent>()->SetOrientation(actorNew->GetComponent<TransformComponent>()->GetOrientation() *= extraRot);
+		}
+
 		actorName = actorColour + std::to_string(i);
 		actors.emplace(actorName, std::move(actorNew));
+
 	}
 
+
+	// Places Pieces in the correct places
 	for (int i = 0; i < actors.size(); i++) {
-		Vec3 startingPosBlack = Vec3(-4.4f, 3.15f, 0.0f); 
-		Vec3 startingPosRed = Vec3(-4.4f, -6.85f, 0.0f);
+		Vec3 startingPosBlack = Vec3(-4.4f, 4.4f, 0.1f); 
+		Vec3 startingPosRed = Vec3(-4.4f, -6.85f, 0.1f);
 		int row = i / 8; 
 		int col = i % 8; 
-		float actorOffset = 1.25f; // Offset to position actors within the grid cells
+		float actorOffset = 1.25f;
 		Vec3 actorPosBlack;
-		actorPosBlack.x = startingPosBlack.x + (actorOffset * col); // Position based on column
-		actorPosBlack.y = startingPosBlack.y + (actorOffset * row); // Position based on row
+		actorPosBlack.x = startingPosBlack.x + (actorOffset * col); 
+		actorPosBlack.y = startingPosBlack.y - (actorOffset * row);
 
 		Vec3 actorPosRed;
-		actorPosRed.x = startingPosRed.x + (actorOffset * col); // Position based on column
-		actorPosRed.y = startingPosRed.y + (actorOffset * row); // Position based on row
+		actorPosRed.x = startingPosRed.x + (actorOffset * col);
+		actorPosRed.y = startingPosRed.y + (actorOffset * row); 
 		if (i < 16) {
 			actors.at("BlackActor" + std::to_string(i))->GetComponent<TransformComponent>()->setPosition(actorPosBlack);
 		}
@@ -91,27 +115,12 @@ bool Scene0g::OnCreate() {
 		}
 	}
 
-
-	
-
-	
 	return true;
 }
 
 void Scene0g::OnDestroy() {
-	for (int i = 0; i < actors.size(); i++) {
-		if (i < 16) {
-			std::string name = "BlackActor" + std::to_string(i);
-			actors.at(name)->OnDestroy();
-			delete actors.at(name);
-		}
+	actors.clear();
 
-		else {
-			std::string name = "RedActor" + std::to_string(i);
-			actors.at(name)->OnDestroy();
-			delete actors.at(name);
-		}
-	}
 	board->OnDestroy();
 	camera->OnDestroy();
 	window->OnDestroy();
@@ -125,8 +134,6 @@ void Scene0g::HandleEvents(const SDL_Event &sdlEvent) {
 		switch (sdlEvent.key.scancode) {
 		case SDL_SCANCODE_J:
 		{
-			/*Quaternion rota = QMath::angleAxisRotation(-45.0f, Vec3(0.0f, 1.0f, 0.0f));
-			board->GetComponent<TransformComponent>()->SetOrientation(board->GetComponent<TransformComponent>()->GetOrientation() *= rota);*/
 			Vec3 speed = Vec3(0.0f, 0.0f, 1.0f);
 			board->GetComponent<TransformComponent>()->setPosition(board->GetComponent<TransformComponent>()->GetPosition() + speed); 
 
@@ -134,8 +141,6 @@ void Scene0g::HandleEvents(const SDL_Event &sdlEvent) {
 		}
 		case SDL_SCANCODE_K:
 		{
-			/*Quaternion rota = QMath::angleAxisRotation(45.0f, Vec3(0.0f, 1.0f, 0.0f));
-			board->GetComponent<TransformComponent>()->SetOrientation(board->GetComponent<TransformComponent>()->GetOrientation() *= rota);*/
 			Vec3 speed = Vec3(0.0f, 0.0f, -1.0f);
 			board->GetComponent<TransformComponent>()->setPosition(board->GetComponent<TransformComponent>()->GetPosition() + speed);
 
@@ -181,6 +186,18 @@ void Scene0g::RenderGUI()
 
 void Scene0g::Update(const float deltaTime) {
 	camera->Update(deltaTime);
+
+
+	//Board Rotation
+	float rotationSpeed = 10.0f;
+	float frameRotation = rotationSpeed * deltaTime;
+	Quaternion rota = QMath::angleAxisRotation(frameRotation, Vec3(0.0f, 1.0f, 0.0f));
+
+	TransformComponent* boardTransform = board->GetComponent<TransformComponent>();
+	if (boardTransform) {
+		boardTransform->SetOrientation(boardTransform->GetOrientation() *= rota);
+	}
+
 }
 
 void Scene0g::Render() const {
@@ -202,28 +219,20 @@ void Scene0g::Render() const {
 	glBindTexture(GL_TEXTURE_2D, board->GetComponent<MaterialComponent>()->getTextureID());
 	board->GetComponent<MeshComponent>()->Render();
 
-	
-	for (int i = 0; i < actors.size(); i++) {
-		if (i < 16) {
-			std::string name = "BlackActor" + std::to_string(i);
-			glUniformMatrix4fv(static_cast<GLint>(shader->GetUniformID("modelMatrix")), 1, GL_FALSE, actors.at(name)->GetModelMatrix());
-			glBindTexture(GL_TEXTURE_2D, actors.at(name)->GetComponent<MaterialComponent>()->getTextureID());
-			actors.at(name)->GetComponent<MeshComponent>()->Render();
-		}
-		else {
-			std::string name = "RedActor" + std::to_string(i);
-			glUniformMatrix4fv(static_cast<GLint>(shader->GetUniformID("modelMatrix")), 1, GL_FALSE, actors.at(name)->GetModelMatrix());
-			glBindTexture(GL_TEXTURE_2D, actors.at(name)->GetComponent<MaterialComponent>()->getTextureID());
-			actors.at(name)->GetComponent<MeshComponent>()->Render();
-		}
-	}
+	 
+	for (Actor* piece : allPieces) {
+		auto* shader = piece->GetComponent<ShaderComponent>();
+		auto* mesh = piece->GetComponent<MeshComponent>();
+		auto* transform = piece->GetComponent<TransformComponent>();
+		auto* material = piece->GetComponent<MaterialComponent>();
 
+		glUniformMatrix4fv(shader->GetUniformID("modelMatrix"), 1, GL_FALSE, piece->GetModelMatrix());
+		glBindTexture(GL_TEXTURE_2D, material->getTextureID());
+		mesh->Render();
+	}
 
 	glBindTexture(GL_TEXTURE_2D, 0);
 	glUseProgram(0);
 	
 }
 
-
-
-	

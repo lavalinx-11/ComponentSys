@@ -11,7 +11,7 @@ int main(int argc, char* args[]) {
 	Debug::DebugInit("GameEngineLog.txt");
 	
 	SceneManager* gsm = new SceneManager();
-	if (gsm->Initialize("Game Engine", 1280, 720) ==  true) {
+	if (gsm->Initialize("Game Engine", 1920, 1080) ==  true) {
 		gsm->Run();
 	} 
 	delete gsm;
