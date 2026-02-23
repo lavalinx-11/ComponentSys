@@ -50,7 +50,7 @@ void Actor::ListComponents() const {
 Matrix4 Actor::GetModelMatrix() {
 	Matrix4 modelMatrix;
 	
-	TransformComponent* transform = GetComponent<TransformComponent>();
+	Ref<TransformComponent> transform = GetComponent<TransformComponent>();
 	if (transform != nullptr) {
 		modelMatrix = transform->GetTransformMatrix();
 	}

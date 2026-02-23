@@ -30,13 +30,13 @@ Scene0g::~Scene0g() {
 bool Scene0g::OnCreate() {
 
 	window = new Window();
-	camera = new CameraActor(nullptr, 45.0f, 16.0f / 9.0f, 0.1f, 100.0f, window->getWindow());
+	camera = std::make_unique<CameraActor>((nullptr, 45.0f, 16.0f / 9.0f, 0.1f, 100.0f, window->getWindow()));
 	camera->AddComponent<TransformComponent>(nullptr, Vec3(0.0f, 0.0f, -15.0f), Quaternion());
 	camera->OnCreate();
 	camera->setCamMovement(true);
 
 
-	board = new Actor(nullptr);
+	board = std::make_unique<Actor>(nullptr);
 	board->AddComponent<MaterialComponent>(nullptr, "textures/8x8_board_red.png");
 	board->AddComponent<MeshComponent>(nullptr, "meshes/Plane.obj");
 	board->AddComponent<ShaderComponent>(nullptr, "shaders/texturePhongVert.glsl", "shaders/texturePhongFrag.glsl");
@@ -44,6 +44,23 @@ bool Scene0g::OnCreate() {
 	board->GetComponent<TransformComponent>()->SetScale(Vec3(5.0f, 5.0f, 5.0f));
 	board->OnCreate();
 
+	pawnActor = std::make_unique<Actor>(nullptr);
+	pawnActor->AddComponent<MeshComponent>(nullptr, "meshes/Pawn.obj");
+
+	queenActor = std::make_unique<Actor>(nullptr);
+	queenActor->AddComponent<MeshComponent>(nullptr, "meshes/Pawn.obj");
+
+	kingActor = std::make_unique<Actor>(nullptr);
+	kingActor->AddComponent<MeshComponent>(nullptr, "meshes/Pawn.obj");
+
+	bishopActor = std::make_unique<Actor>(nullptr);
+	bishopActor->AddComponent<MeshComponent>(nullptr, "meshes/Pawn.obj");
+
+	knightActor = std::make_unique<Actor>(nullptr);
+	knightActor->AddComponent<MeshComponent>(nullptr, "meshes/Pawn.obj"); 
+
+	rookActor = std::make_unique<Actor>(nullptr);
+	rookActor->AddComponent<MeshComponent>(nullptr, "meshes/Pawn.obj");
 
 	std::string pieceMeshes[] = {
 	"meshes/Rook.obj", "meshes/Knight.obj", "meshes/Bishop.obj", "meshes/Queen.obj",
@@ -57,14 +74,15 @@ bool Scene0g::OnCreate() {
 	"Rook", "Knight", "Bishop", "Queen", "King", "Bishop", "Knight", "Rook"
 	};
 
+
 	
 
 	for (int i = 0; i < 32; i++) {
 		int pieceIndex = i % 16; // Index to determine the type of piece 
-		std::string meshPath = pieceMeshes[pieceIndex];
+		//std::string meshPath = pieceMeshes[pieceIndex];
 		Actor* actorNew = new Actor(board);
 
-		actorNew->AddComponent<MeshComponent>(nullptr, meshPath.c_str());
+		//actorNew->AddComponent<MeshComponent>(nullptr, meshPath.c_str());
 		std::string type = (pieceIndex < 8) ? pieceTypes[pieceIndex] : "Pawn";
 		actorNew->AddComponent<ShaderComponent>(nullptr, "shaders/texturePhongVert.glsl", "shaders/texturePhongFrag.glsl");
 		actorNew->AddComponent<TransformComponent>(nullptr, Vec3(-4.4f, -4.4f, 0.0f), Quaternion(), Vec3(0.125f, 0.125f, 0.125f));
@@ -193,7 +211,7 @@ void Scene0g::Update(const float deltaTime) {
 	float frameRotation = rotationSpeed * deltaTime;
 	Quaternion rota = QMath::angleAxisRotation(frameRotation, Vec3(0.0f, 1.0f, 0.0f));
 
-	TransformComponent* boardTransform = board->GetComponent<TransformComponent>();
+	Ref<TransformComponent> boardTransform = board->GetComponent<TransformComponent>();
 	if (boardTransform) {
 		boardTransform->SetOrientation(boardTransform->GetOrientation() *= rota);
 	}
@@ -208,7 +226,7 @@ void Scene0g::Render() const {
 	glEnable(GL_CULL_FACE);
 
 
-	ShaderComponent* shader = board->GetComponent<ShaderComponent>();
+	Ref<ShaderComponent> shader = board->GetComponent<ShaderComponent>();
 
 	glUseProgram(shader->GetProgram());
 	glUniformMatrix4fv(static_cast<GLint>(shader->GetUniformID("projectionMatrix")), 1, GL_FALSE, camera->GetProjectionMatrix());
@@ -221,10 +239,10 @@ void Scene0g::Render() const {
 
 	 
 	for (Actor* piece : allPieces) {
-		auto* shader = piece->GetComponent<ShaderComponent>();
-		auto* mesh = piece->GetComponent<MeshComponent>();
-		auto* transform = piece->GetComponent<TransformComponent>();
-		auto* material = piece->GetComponent<MaterialComponent>();
+		Ref<ShaderComponent> shader = piece->GetComponent<ShaderComponent>();
+		Ref<MeshComponent> mesh = piece->GetComponent<MeshComponent>();
+		Ref<TransformComponent> transform = piece->GetComponent<TransformComponent>();
+		Ref<MaterialComponent> material = piece->GetComponent<MaterialComponent>();
 
 		glUniformMatrix4fv(shader->GetUniformID("modelMatrix"), 1, GL_FALSE, piece->GetModelMatrix());
 		glBindTexture(GL_TEXTURE_2D, material->getTextureID());

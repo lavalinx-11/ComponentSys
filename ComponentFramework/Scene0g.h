@@ -13,15 +13,21 @@ union SDL_Event;
 
 class Scene0g : public Scene {
 private:
-	Actor* actor;
-	Actor* board;
-	CameraActor* camera;
-	std::unordered_map<std::string, Actor*> actors; // Map to store actors by name
+	std::unique_ptr<Actor> knightActor;
+	std::unique_ptr<Actor> queenActor;
+	std::unique_ptr<Actor> pawnActor;
+	std::unique_ptr<Actor> kingActor;
+	std::unique_ptr<Actor> bishopActor;
+	std::unique_ptr<Actor> rookActor;
+	std::unique_ptr<Actor> board;
+	std::unique_ptr<CameraActor> camera; 
+
+	std::unordered_map<std::string, std::unique_ptr<Actor>> actors; // Map to store actors by name
 	std::string actorName; 
 	std::string actorColour;
 	std::string actorType;
-	std::vector<Actor*> allPieces;   
-	std::vector<Actor*> knightPieces; 
+	std::vector<std::unique_ptr<Actor>> allPieces;
+	std::vector<std::unique_ptr<Actor>> knightPieces;
 	bool drawInWireMode;
 	bool showImGuiDemoWindow = true; // optional for testing
 	char textBuffer[256] = "";       // input text buffer
