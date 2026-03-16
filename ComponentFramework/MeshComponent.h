@@ -14,7 +14,7 @@ class MeshComponent : public Component
 	GLenum drawmode;
 	GLuint vao, vbo;
 	public:
-		MeshComponent(Component* parent_, const char* filename_);
+		MeshComponent(std::weak_ptr<Component> parent_, const char* filename_);
 		~MeshComponent();
 		virtual bool OnCreate() override;
 		virtual void OnDestroy() override;

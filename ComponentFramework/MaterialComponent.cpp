@@ -1,6 +1,6 @@
 #include "MaterialComponent.h"
 #include <SDL_image.h>
-MaterialComponent::MaterialComponent(Component* parent_, const char* filename_) :
+MaterialComponent::MaterialComponent(std::weak_ptr<Component> parent_, const char* filename_) :
 	Component(parent_), textureID(0), filename(filename_) {}
 
 MaterialComponent::~MaterialComponent() {

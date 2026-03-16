@@ -12,22 +12,17 @@ class Actor : public Component {
 	Actor& operator=(Actor&&) = delete;
 
 private:
-	std::vector<Component*> components;
+	std::vector<Ref<Component>> components;
 
 public:
-	Actor(Component* parent_);
+	Actor(std::weak_ptr<Component> parent_);
 	~Actor();
 	virtual bool OnCreate() override;
 	virtual void OnDestroy() override;
 	virtual void Update(const float deltaTime) override;
 	virtual void Render() const override;
 
-	//template<typename ComponentTemplate, typename ... Args>
-	//void AddComponent(Args&& ... args_) {
-	//	ComponentTemplate* componentObject = new ComponentTemplate(std::forward<Args>(args_)...);
-	//	components.push_back(componentObject);
 
-	//}
 
 	template<typename ComponentTemplate>
 	void AddComponent(Ref<ComponentTemplate> component_) {
@@ -55,16 +50,7 @@ public:
 	}
 
 	//                       <- Get Component ->
-
-	/*template<typename ComponentTemplate>
-	ComponentTemplate* GetComponent() {
-		for (auto component : components) {
-			if (dynamic_cast<ComponentTemplate*>(component) != nullptr) {
-				return dynamic_cast<ComponentTemplate*>(component);
-			}
-		}
-		return nullptr;
-	}*/
+	
 
 	template<typename ComponentTemplate>
 	Ref<ComponentTemplate> GetComponent() const {
@@ -81,11 +67,11 @@ public:
 
 	template<typename ComponentTemplate>
 	void RemoveComponent() {
-		for (size_t i = 0; i < components.size(); i++) {
-			if (dynamic_cast<ComponentTemplate*>(components[i]) != nullptr) {
-				components[i]->OnDestroy();
-				delete components[i];
-				components.erase(components.begin() + i);
+		for (auto it = components.begin(); it != components.end(); ++it) {
+			// Use dynamic_pointer_cast to check the type
+			if (std::dynamic_pointer_cast<ComponentTemplate>(*it)) {
+				(*it)->OnDestroy();
+				components.erase(it); // Erasing the shared_ptr automatically deletes the object!
 				break;
 			}
 		}
@@ -93,7 +79,7 @@ public:
 
 
 
-	Matrix4 GetModelMatrix();
+	Matrix4 GetModelMatrix() const;
 	void ListComponents() const;
 	void RemoveAllComponents();
 };

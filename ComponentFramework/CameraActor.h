@@ -28,7 +28,7 @@ private:
 	Vec3 position;
 	SDL_Window* window;
 public:
-	CameraActor( Actor* parent_, float fovy, float aspectRatio, float near, float far, SDL_Window* window_);
+	CameraActor( std::weak_ptr<Actor>parent_, float fovy, float aspectRatio, float near, float far, SDL_Window* window_);
 	~CameraActor();
 	bool OnCreate();
 	Matrix4 GetProjectionMatrix() { return projectionMatrix; }

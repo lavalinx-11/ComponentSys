@@ -1,7 +1,7 @@
 #include "Actor.h"
 #include "Debug.h"
 #include <MMath.h>
-Actor::Actor(Component* parent_):Component(parent_) {}
+Actor::Actor(std::weak_ptr<Component> parent_): Component(parent_) {}
 
 bool Actor::OnCreate() {
 	if (isCreated) return true;
@@ -41,25 +41,27 @@ void Actor::RemoveAllComponents() {
 
 void Actor::ListComponents() const {
 	std::cout << typeid(*this).name() << " contains the following components:\n";
-	for (Component* component : components) {
+	for (Ref<Component> component : components) {
 		std::cout << typeid(*component).name() << std::endl;
 	}
 	std::cout << '\n';
 }
 
-Matrix4 Actor::GetModelMatrix() {
+Matrix4 Actor::GetModelMatrix () const
+{
 	Matrix4 modelMatrix;
-	
-	Ref<TransformComponent> transform = GetComponent<TransformComponent>();
-	if (transform != nullptr) {
+
+	if (const Ref<TransformComponent> transform = GetComponent<TransformComponent>())
+	{
 		modelMatrix = transform->GetTransformMatrix();
 	}
-	else {
+	else
+	{
 		modelMatrix.loadIdentity();
 	}
-	if (parent != nullptr) { 
-		transform = dynamic_cast<Actor*>(parent)->GetComponent<TransformComponent>();
-		modelMatrix = dynamic_cast<Actor*>(parent)->GetModelMatrix() * modelMatrix;
+	if (const auto parentPtr = parent.lock())
+	{
+		modelMatrix = dynamic_cast<Actor*>(parentPtr.get())->GetModelMatrix() * modelMatrix;
 	}
 	return modelMatrix;
 }

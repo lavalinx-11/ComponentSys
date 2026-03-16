@@ -4,13 +4,13 @@
 #include "MMath.h"
 using namespace MATH;
 
-TransformComponent::TransformComponent(Component* parent_) :Component(parent_) {
+TransformComponent::TransformComponent(std::weak_ptr<Component> parent_) :Component(parent_) {
 	pos = Vec3(0.0f, 0.0f, 0.0f);
 	orientation = Quaternion(1.0f, Vec3(0.0f, 0.0f, 0.0f));
 	scale = Vec3(1.0f, 1.0f, 1.0f);
 }
 
-TransformComponent::TransformComponent(Component* parent_, Vec3 pos_, Quaternion orientation_, Vec3 scale_) :
+TransformComponent::TransformComponent(std::weak_ptr<Component> parent_, Vec3 pos_, Quaternion orientation_, Vec3 scale_) :
 	Component{ parent_ }, pos{ pos_ }, orientation{ orientation_ }, scale{ scale_ } {
 }
 

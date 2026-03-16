@@ -1,7 +1,7 @@
 #include "CameraActor.h"
 #include "TransformComponent.h"
 
-CameraActor::CameraActor(Actor* parent_, float fovy, float aspectRatio, float near, float far, SDL_Window* window_) :
+CameraActor::CameraActor(std::weak_ptr<Actor>parent_, float fovy, float aspectRatio, float near, float far, SDL_Window* window_) :
 	Actor(parent_), window(window_)
 {
 
@@ -72,7 +72,7 @@ void CameraActor::HandleEvents(const SDL_Event& event)
 CameraActor::~CameraActor() {}
 
 bool CameraActor::OnCreate() {
-	TransformComponent* tc = GetComponent<TransformComponent>();
+	Ref<TransformComponent> tc = GetComponent<TransformComponent>();
 	if (tc != nullptr) {
 		viewMatrix = tc->GetTransformMatrix();
 		viewMatrix.print("view matrix");

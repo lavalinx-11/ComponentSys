@@ -6,7 +6,7 @@
 
 
 
-MeshComponent::MeshComponent(Component* parent_, const char* filename_) : Component(parent_), 
+MeshComponent::MeshComponent(std::weak_ptr<Component> parent_, const char* filename_) : Component(parent_), 
 dateLength(0),
 filename(filename_)
 , drawmode(0)

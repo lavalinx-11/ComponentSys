@@ -7,22 +7,45 @@
 #include <unordered_map>
 #include "CameraActor.h"
 #include "Window.h"
+#include "ShaderComponent.h"
+#include "MeshComponent.h"
+#include "MaterialComponent.h"
 /// Forward declarations 
 union SDL_Event;
 
 
+
+
+enum PieceType
+{
+	PAWN,
+	ROOK,
+	KNIGHT,
+	BISHOP,
+	QUEEN,
+	KING
+};
+struct ActorData
+{
+	std::unique_ptr<Actor> actor;
+	PieceType actorType;
+	std::string colour;
+};
 class Scene0g : public Scene {
 private:
-	std::unique_ptr<Actor> knightActor;
-	std::unique_ptr<Actor> queenActor;
-	std::unique_ptr<Actor> pawnActor;
-	std::unique_ptr<Actor> kingActor;
-	std::unique_ptr<Actor> bishopActor;
-	std::unique_ptr<Actor> rookActor;
-	std::unique_ptr<Actor> board;
-	std::unique_ptr<CameraActor> camera; 
+	Ref<ShaderComponent> shader;
+	std::unique_ptr<MeshComponent> pawnMesh;
+	std::unique_ptr<MeshComponent> rookMesh;
+	std::unique_ptr<MeshComponent> knightMesh;
+	std::unique_ptr<MeshComponent> bishopMesh;
+	std::unique_ptr<MeshComponent> queenMesh;
+	std::unique_ptr<MeshComponent> kingMesh;
+	std::unique_ptr<MaterialComponent> blackChessPieces;
+	std::unique_ptr<MaterialComponent> whiteChessPieces;
+	Ref<Actor> board;
+	Ref<CameraActor> camera; 
 
-	std::unordered_map<std::string, std::unique_ptr<Actor>> actors; // Map to store actors by name
+	std::unordered_map<std::string, ActorData> actors; // Map to store actors by name
 	std::string actorName; 
 	std::string actorColour;
 	std::string actorType;

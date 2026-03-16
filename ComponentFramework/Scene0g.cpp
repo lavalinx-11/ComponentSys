@@ -27,86 +27,89 @@ Scene0g::~Scene0g() {
 	Debug::Info("Deleted Scene0: ", __FILE__, __LINE__);
 }
 
+PieceType StringToPieceType(const std::string& typeStr) {
+	if (typeStr == "Pawn")   return PieceType::PAWN;
+	if (typeStr == "Rook")   return PieceType::ROOK;
+	if (typeStr == "Knight") return PieceType::KNIGHT;
+	if (typeStr == "Bishop") return PieceType::BISHOP;
+	if (typeStr == "Queen")  return PieceType::QUEEN;
+	if (typeStr == "King")   return PieceType::KING;
+	return PieceType::PAWN;
+}
+
 bool Scene0g::OnCreate() {
 
+	shader = std::make_shared<ShaderComponent>(std::weak_ptr<Component>(),"shaders/texturePhongVert.glsl","shaders/texturePhongFrag.glsl");
+	shader->OnCreate();
 	window = new Window();
-	camera = std::make_unique<CameraActor>((nullptr, 45.0f, 16.0f / 9.0f, 0.1f, 100.0f, window->getWindow()));
-	camera->AddComponent<TransformComponent>(nullptr, Vec3(0.0f, 0.0f, -15.0f), Quaternion());
+	camera = std::make_shared<CameraActor>(std::weak_ptr<Actor>(), 45.0f, 16.0f / 9.0f, 0.1f, 100.0f, window->getWindow());
+	camera->AddComponent<TransformComponent>(std::weak_ptr<Component>(), Vec3(0.0f, 0.0f, -15.0f), Quaternion());
 	camera->OnCreate();
 	camera->setCamMovement(true);
 
 
-	board = std::make_unique<Actor>(nullptr);
-	board->AddComponent<MaterialComponent>(nullptr, "textures/8x8_board_red.png");
-	board->AddComponent<MeshComponent>(nullptr, "meshes/Plane.obj");
-	board->AddComponent<ShaderComponent>(nullptr, "shaders/texturePhongVert.glsl", "shaders/texturePhongFrag.glsl");
-	board->AddComponent<TransformComponent>(nullptr, Vec3(0.0f, 0.0f, 0.0f), QMath::angleAxisRotation(-90.0f, Vec3(1.0f, 0.0f, 0.0f)));
+	board = std::make_shared<Actor>(std::weak_ptr<Component>());
+	board->AddComponent<MaterialComponent>(std::weak_ptr<Component>(), "textures/8x8_board_red.png");
+	board->AddComponent<MeshComponent>(std::weak_ptr<Component>(), "meshes/Plane.obj");
+	board->AddComponent<TransformComponent>(std::weak_ptr<Component>(), Vec3(0.0f, 0.0f, 0.0f), QMath::angleAxisRotation(-90.0f, Vec3(1.0f, 0.0f, 0.0f)));
 	board->GetComponent<TransformComponent>()->SetScale(Vec3(5.0f, 5.0f, 5.0f));
 	board->OnCreate();
 
-	pawnActor = std::make_unique<Actor>(nullptr);
-	pawnActor->AddComponent<MeshComponent>(nullptr, "meshes/Pawn.obj");
-
-	queenActor = std::make_unique<Actor>(nullptr);
-	queenActor->AddComponent<MeshComponent>(nullptr, "meshes/Pawn.obj");
-
-	kingActor = std::make_unique<Actor>(nullptr);
-	kingActor->AddComponent<MeshComponent>(nullptr, "meshes/Pawn.obj");
-
-	bishopActor = std::make_unique<Actor>(nullptr);
-	bishopActor->AddComponent<MeshComponent>(nullptr, "meshes/Pawn.obj");
-
-	knightActor = std::make_unique<Actor>(nullptr);
-	knightActor->AddComponent<MeshComponent>(nullptr, "meshes/Pawn.obj"); 
-
-	rookActor = std::make_unique<Actor>(nullptr);
-	rookActor->AddComponent<MeshComponent>(nullptr, "meshes/Pawn.obj");
-
-	std::string pieceMeshes[] = {
-	"meshes/Rook.obj", "meshes/Knight.obj", "meshes/Bishop.obj", "meshes/Queen.obj",
-	"meshes/King.obj", "meshes/Bishop.obj", "meshes/Knight.obj", "meshes/Rook.obj",
-	"meshes/Pawn.obj", "meshes/Pawn.obj", "meshes/Pawn.obj", "meshes/Pawn.obj",
-	"meshes/Pawn.obj", "meshes/Pawn.obj", "meshes/Pawn.obj", "meshes/Pawn.obj"
-	};
-
+	pawnMesh = std::make_unique<MeshComponent>(std::weak_ptr<Component>(),"meshes/Pawn.obj");
+	pawnMesh->OnCreate();
+	
+	queenMesh = std::make_unique<MeshComponent>(std::weak_ptr<Component>(),"meshes/Queen.obj");
+	queenMesh->OnCreate();
+	
+	kingMesh = std::make_unique<MeshComponent>(std::weak_ptr<Component>(),"meshes/King.obj");
+	kingMesh->OnCreate();
+	
+	bishopMesh = std::make_unique<MeshComponent>(std::weak_ptr<Component>(),"meshes/Bishop.obj");
+	bishopMesh->OnCreate();
+	
+	knightMesh = std::make_unique<MeshComponent>(std::weak_ptr<Component>(),"meshes/Knight.obj");
+	knightMesh->OnCreate();
+	
+	rookMesh = std::make_unique<MeshComponent>(std::weak_ptr<Component>(),"meshes/Rook.obj");
+	rookMesh->OnCreate();
+	
+	blackChessPieces = std::make_unique<MaterialComponent>(std::weak_ptr<Component>(), "textures/BlackChessPiece.png");
+	blackChessPieces->OnCreate();
+	
+	whiteChessPieces = std::make_unique<MaterialComponent>(std::weak_ptr<Component>(), "textures/BlackChessPiece.png");
+	whiteChessPieces->OnCreate();
 
 	std::string pieceTypes[] = {
 	"Rook", "Knight", "Bishop", "Queen", "King", "Bishop", "Knight", "Rook"
 	};
 
-
-	
-
+	PieceType aType;
 	for (int i = 0; i < 32; i++) {
 		int pieceIndex = i % 16; // Index to determine the type of piece 
-		//std::string meshPath = pieceMeshes[pieceIndex];
-		Actor* actorNew = new Actor(board);
+		std::unique_ptr<Actor>actorNew = std::make_unique<Actor>(board); 
 
 		//actorNew->AddComponent<MeshComponent>(nullptr, meshPath.c_str());
 		std::string type = (pieceIndex < 8) ? pieceTypes[pieceIndex] : "Pawn";
-		actorNew->AddComponent<ShaderComponent>(nullptr, "shaders/texturePhongVert.glsl", "shaders/texturePhongFrag.glsl");
-		actorNew->AddComponent<TransformComponent>(nullptr, Vec3(-4.4f, -4.4f, 0.0f), Quaternion(), Vec3(0.125f, 0.125f, 0.125f));
+		aType = StringToPieceType(type);
+		actorNew->AddComponent<TransformComponent>(std::weak_ptr<Component>(), Vec3(-4.4f, -4.4f, 0.0f), Quaternion(), Vec3(0.125f, 0.125f, 0.125f));
 		Quaternion rot = QMath::angleAxisRotation(90.0f, Vec3(1.0f, 0.0f, 0.0f));
 		actorNew->GetComponent<TransformComponent>()->SetOrientation(actorNew->GetComponent<TransformComponent>()->GetOrientation() *= rot);
 		
 		if (i < 16) {
-			actorNew->AddComponent<MaterialComponent>(nullptr, "textures/BlackChessPiece.png");
 			actorColour = "BlackActor";
 		}
 		else {
-			actorNew->AddComponent<MaterialComponent>(nullptr, "textures/WhiteChessPiece.png");
-			actorColour = "RedActor";
+			actorColour = "WhiteActor";
 		}
 
 		actorNew->OnCreate();
-		allPieces.push_back(actorNew);
-		if (type == "Knight" && actorColour == "RedActor") {
+		if (type == "Knight" && actorColour == "WhiteActor") {
 			Quaternion extraRot = QMath::angleAxisRotation(180, Vec3(0.0f, 0.0f, 1.0f));
 			actorNew->GetComponent<TransformComponent>()->SetOrientation(actorNew->GetComponent<TransformComponent>()->GetOrientation() *= extraRot);
 		}
-
+		
 		actorName = actorColour + std::to_string(i);
-		actors.emplace(actorName, std::move(actorNew));
+		actors.emplace(actorName, ActorData{std::move(actorNew), aType, actorColour});
 
 	}
 
@@ -126,10 +129,10 @@ bool Scene0g::OnCreate() {
 		actorPosRed.x = startingPosRed.x + (actorOffset * col);
 		actorPosRed.y = startingPosRed.y + (actorOffset * row); 
 		if (i < 16) {
-			actors.at("BlackActor" + std::to_string(i))->GetComponent<TransformComponent>()->setPosition(actorPosBlack);
+			actors.at("BlackActor" + std::to_string(i)).actor->GetComponent<TransformComponent>()->setPosition(actorPosBlack);
 		}
 		else   {
-			actors.at("RedActor" + std::to_string(i))->GetComponent<TransformComponent>()->setPosition(actorPosRed);
+			actors.at("WhiteActor" + std::to_string(i)).actor->GetComponent<TransformComponent>()->setPosition(actorPosRed);
 		}
 	}
 
@@ -139,9 +142,18 @@ bool Scene0g::OnCreate() {
 void Scene0g::OnDestroy() {
 	actors.clear();
 
+	shader->OnDestroy();
+	pawnMesh->OnDestroy();
+	rookMesh->OnDestroy();
+	knightMesh->OnDestroy();
+	bishopMesh->OnDestroy();
+	queenMesh->OnDestroy();
+	kingMesh->OnDestroy();
 	board->OnDestroy();
 	camera->OnDestroy();
 	window->OnDestroy();
+	blackChessPieces->OnDestroy();
+	whiteChessPieces->OnDestroy();
 	delete window;
 }
 
@@ -226,7 +238,6 @@ void Scene0g::Render() const {
 	glEnable(GL_CULL_FACE);
 
 
-	Ref<ShaderComponent> shader = board->GetComponent<ShaderComponent>();
 
 	glUseProgram(shader->GetProgram());
 	glUniformMatrix4fv(static_cast<GLint>(shader->GetUniformID("projectionMatrix")), 1, GL_FALSE, camera->GetProjectionMatrix());
@@ -238,12 +249,48 @@ void Scene0g::Render() const {
 	board->GetComponent<MeshComponent>()->Render();
 
 	 
-	for (Actor* piece : allPieces) {
-		Ref<ShaderComponent> shader = piece->GetComponent<ShaderComponent>();
-		Ref<MeshComponent> mesh = piece->GetComponent<MeshComponent>();
+	for (const auto& pair : actors) {
+		PieceType actorType = pair.second.actorType;
+		Actor* piece = pair.second.actor.get();
+		std::string colour = pair.second.colour;
+		MeshComponent* mesh = nullptr;
+		switch (actorType)
+		{
+			case(PAWN):
+			mesh = pawnMesh.get();
+			break;
+			
+			case(KING):
+			mesh = kingMesh.get();
+			break;
+			
+			case(QUEEN):
+			mesh = queenMesh.get();
+			break;
+			
+			case(BISHOP):
+			mesh = bishopMesh.get();
+			break;
+			
+			case(ROOK):
+			mesh = rookMesh.get();
+			break;
+			
+			case(KNIGHT):
+			mesh = knightMesh.get();
+			break;
+		}
 		Ref<TransformComponent> transform = piece->GetComponent<TransformComponent>();
-		Ref<MaterialComponent> material = piece->GetComponent<MaterialComponent>();
-
+		MaterialComponent* material = nullptr;
+		
+		if (colour == "BlackActor")
+		{
+			material = blackChessPieces.get();
+		}
+		if (colour == "WhiteActor")
+		{
+			material = whiteChessPieces.get();
+		}
 		glUniformMatrix4fv(shader->GetUniformID("modelMatrix"), 1, GL_FALSE, piece->GetModelMatrix());
 		glBindTexture(GL_TEXTURE_2D, material->getTextureID());
 		mesh->Render();
