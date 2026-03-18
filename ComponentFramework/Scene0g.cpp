@@ -38,7 +38,6 @@ PieceType StringToPieceType(const std::string& typeStr) {
 }
 
 bool Scene0g::OnCreate() {
-
 	shader = std::make_shared<ShaderComponent>(std::weak_ptr<Component>(),"shaders/texturePhongVert.glsl","shaders/texturePhongFrag.glsl");
 	shader->OnCreate();
 	window = new Window();
@@ -46,8 +45,7 @@ bool Scene0g::OnCreate() {
 	camera->AddComponent<TransformComponent>(std::weak_ptr<Component>(), Vec3(0.0f, 0.0f, -15.0f), Quaternion());
 	camera->OnCreate();
 	camera->setCamMovement(true);
-
-
+	
 	board = std::make_shared<Actor>(std::weak_ptr<Component>());
 	board->AddComponent<MaterialComponent>(std::weak_ptr<Component>(), "textures/8x8_board_red.png");
 	board->AddComponent<MeshComponent>(std::weak_ptr<Component>(), "meshes/Plane.obj");
@@ -55,28 +53,28 @@ bool Scene0g::OnCreate() {
 	board->GetComponent<TransformComponent>()->SetScale(Vec3(5.0f, 5.0f, 5.0f));
 	board->OnCreate();
 
-	pawnMesh = std::make_unique<MeshComponent>(std::weak_ptr<Component>(),"meshes/Pawn.obj");
+	Ref<MeshComponent> pawnMesh = std::make_shared<MeshComponent>(std::weak_ptr<Component>(),"meshes/Pawn.obj");
 	pawnMesh->OnCreate();
 	
-	queenMesh = std::make_unique<MeshComponent>(std::weak_ptr<Component>(),"meshes/Queen.obj");
+	Ref<MeshComponent> queenMesh = std::make_shared<MeshComponent>(std::weak_ptr<Component>(),"meshes/Queen.obj");
 	queenMesh->OnCreate();
 	
-	kingMesh = std::make_unique<MeshComponent>(std::weak_ptr<Component>(),"meshes/King.obj");
+	Ref<MeshComponent> kingMesh = std::make_shared<MeshComponent>(std::weak_ptr<Component>(),"meshes/King.obj");
 	kingMesh->OnCreate();
 	
-	bishopMesh = std::make_unique<MeshComponent>(std::weak_ptr<Component>(),"meshes/Bishop.obj");
+	Ref<MeshComponent> bishopMesh = std::make_shared<MeshComponent>(std::weak_ptr<Component>(),"meshes/Bishop.obj");
 	bishopMesh->OnCreate();
 	
-	knightMesh = std::make_unique<MeshComponent>(std::weak_ptr<Component>(),"meshes/Knight.obj");
+	Ref<MeshComponent> knightMesh = std::make_shared<MeshComponent>(std::weak_ptr<Component>(),"meshes/Knight.obj");
 	knightMesh->OnCreate();
 	
-	rookMesh = std::make_unique<MeshComponent>(std::weak_ptr<Component>(),"meshes/Rook.obj");
+	Ref<MeshComponent> rookMesh = std::make_shared<MeshComponent>(std::weak_ptr<Component>(),"meshes/Rook.obj");
 	rookMesh->OnCreate();
 	
-	blackChessPieces = std::make_unique<MaterialComponent>(std::weak_ptr<Component>(), "textures/BlackChessPiece.png");
+	Ref<MaterialComponent>blackChessPieces = std::make_shared<MaterialComponent>(std::weak_ptr<Component>(), "textures/BlackChessPiece.png");
 	blackChessPieces->OnCreate();
 	
-	whiteChessPieces = std::make_unique<MaterialComponent>(std::weak_ptr<Component>(), "textures/BlackChessPiece.png");
+	Ref<MaterialComponent>whiteChessPieces = std::make_shared<MaterialComponent>(std::weak_ptr<Component>(), "textures/WhiteChessPiece.png");
 	whiteChessPieces->OnCreate();
 
 	std::string pieceTypes[] = {
@@ -85,10 +83,8 @@ bool Scene0g::OnCreate() {
 
 	PieceType aType;
 	for (int i = 0; i < 32; i++) {
-		int pieceIndex = i % 16; // Index to determine the type of piece 
+		int pieceIndex = i % 16; 
 		std::unique_ptr<Actor>actorNew = std::make_unique<Actor>(board); 
-
-		//actorNew->AddComponent<MeshComponent>(nullptr, meshPath.c_str());
 		std::string type = (pieceIndex < 8) ? pieceTypes[pieceIndex] : "Pawn";
 		aType = StringToPieceType(type);
 		actorNew->AddComponent<TransformComponent>(std::weak_ptr<Component>(), Vec3(-4.4f, -4.4f, 0.0f), Quaternion(), Vec3(0.125f, 0.125f, 0.125f));
@@ -101,7 +97,48 @@ bool Scene0g::OnCreate() {
 		else {
 			actorColour = "WhiteActor";
 		}
+		
+		switch (aType)
+		{
+		case(PAWN):
+			actorNew->AddComponent<MeshComponent>(pawnMesh);
+			break;
+			
+		case(KING):
+			actorNew->AddComponent<MeshComponent>(kingMesh);
 
+			break;
+			
+		case(QUEEN):
+			actorNew->AddComponent<MeshComponent>(queenMesh);
+
+			break;
+			
+		case(BISHOP):
+			actorNew->AddComponent<MeshComponent>(bishopMesh);
+
+			break;
+			
+		case(ROOK):
+			actorNew->AddComponent<MeshComponent>(rookMesh);
+
+			break;
+			
+		case(KNIGHT):
+			actorNew->AddComponent<MeshComponent>(knightMesh);
+			break;
+		}
+		
+		if (actorColour == "BlackActor")
+		{
+			actorNew->AddComponent<MaterialComponent>(blackChessPieces);
+		}
+		
+		if (actorColour == "WhiteActor")
+		{
+			actorNew->AddComponent<MaterialComponent>(whiteChessPieces);
+		}
+		
 		actorNew->OnCreate();
 		if (type == "Knight" && actorColour == "WhiteActor") {
 			Quaternion extraRot = QMath::angleAxisRotation(180, Vec3(0.0f, 0.0f, 1.0f));
@@ -143,17 +180,9 @@ void Scene0g::OnDestroy() {
 	actors.clear();
 
 	shader->OnDestroy();
-	pawnMesh->OnDestroy();
-	rookMesh->OnDestroy();
-	knightMesh->OnDestroy();
-	bishopMesh->OnDestroy();
-	queenMesh->OnDestroy();
-	kingMesh->OnDestroy();
 	board->OnDestroy();
 	camera->OnDestroy();
 	window->OnDestroy();
-	blackChessPieces->OnDestroy();
-	whiteChessPieces->OnDestroy();
 	delete window;
 }
 
@@ -252,48 +281,9 @@ void Scene0g::Render() const {
 	for (const auto& pair : actors) {
 		PieceType actorType = pair.second.actorType;
 		Actor* piece = pair.second.actor.get();
-		std::string colour = pair.second.colour;
-		MeshComponent* mesh = nullptr;
-		switch (actorType)
-		{
-			case(PAWN):
-			mesh = pawnMesh.get();
-			break;
-			
-			case(KING):
-			mesh = kingMesh.get();
-			break;
-			
-			case(QUEEN):
-			mesh = queenMesh.get();
-			break;
-			
-			case(BISHOP):
-			mesh = bishopMesh.get();
-			break;
-			
-			case(ROOK):
-			mesh = rookMesh.get();
-			break;
-			
-			case(KNIGHT):
-			mesh = knightMesh.get();
-			break;
-		}
-		Ref<TransformComponent> transform = piece->GetComponent<TransformComponent>();
-		MaterialComponent* material = nullptr;
-		
-		if (colour == "BlackActor")
-		{
-			material = blackChessPieces.get();
-		}
-		if (colour == "WhiteActor")
-		{
-			material = whiteChessPieces.get();
-		}
 		glUniformMatrix4fv(shader->GetUniformID("modelMatrix"), 1, GL_FALSE, piece->GetModelMatrix());
-		glBindTexture(GL_TEXTURE_2D, material->getTextureID());
-		mesh->Render();
+		glBindTexture(GL_TEXTURE_2D, piece->GetComponent<MaterialComponent>()->getTextureID());
+		piece->GetComponent<MeshComponent>()->Render();
 	}
 
 	glBindTexture(GL_TEXTURE_2D, 0);

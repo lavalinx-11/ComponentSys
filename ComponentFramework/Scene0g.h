@@ -34,18 +34,10 @@ struct ActorData
 class Scene0g : public Scene {
 private:
 	Ref<ShaderComponent> shader;
-	std::unique_ptr<MeshComponent> pawnMesh;
-	std::unique_ptr<MeshComponent> rookMesh;
-	std::unique_ptr<MeshComponent> knightMesh;
-	std::unique_ptr<MeshComponent> bishopMesh;
-	std::unique_ptr<MeshComponent> queenMesh;
-	std::unique_ptr<MeshComponent> kingMesh;
-	std::unique_ptr<MaterialComponent> blackChessPieces;
-	std::unique_ptr<MaterialComponent> whiteChessPieces;
 	Ref<Actor> board;
 	Ref<CameraActor> camera; 
 
-	std::unordered_map<std::string, ActorData> actors; // Map to store actors by name
+	std::unordered_map<std::string, ActorData> actors; 
 	std::string actorName; 
 	std::string actorColour;
 	std::string actorType;
