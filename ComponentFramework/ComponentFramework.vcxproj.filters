@@ -60,30 +60,6 @@
     <ClCompile Include="GuiWindow.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\GameDev\imgui\imgui.cpp">
-      <Filter>extras\CPP</Filter>
-    </ClCompile>
-    <ClCompile Include="C:\GameDev\imgui\imgui_demo.cpp">
-      <Filter>extras\CPP</Filter>
-    </ClCompile>
-    <ClCompile Include="C:\GameDev\imgui\imgui_draw.cpp">
-      <Filter>extras\CPP</Filter>
-    </ClCompile>
-    <ClCompile Include="C:\GameDev\imgui\imgui_impl_glfw.cpp">
-      <Filter>extras\CPP</Filter>
-    </ClCompile>
-    <ClCompile Include="C:\GameDev\imgui\imgui_impl_opengl3.cpp">
-      <Filter>extras\CPP</Filter>
-    </ClCompile>
-    <ClCompile Include="C:\GameDev\imgui\imgui_impl_sdl3.cpp">
-      <Filter>extras\CPP</Filter>
-    </ClCompile>
-    <ClCompile Include="C:\GameDev\imgui\imgui_tables.cpp">
-      <Filter>extras\CPP</Filter>
-    </ClCompile>
-    <ClCompile Include="C:\GameDev\imgui\imgui_widgets.cpp">
-      <Filter>extras\CPP</Filter>
-    </ClCompile>
     <ClCompile Include="MeshComponent.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -94,6 +70,33 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="CameraActor.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\..\..\GameDev\imgui\imgui.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\..\..\GameDev\imgui\imgui_demo.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\..\..\GameDev\imgui\imgui_draw.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\..\..\GameDev\imgui\imgui_impl_glfw.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\..\..\GameDev\imgui\imgui_impl_opengl3.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\..\..\GameDev\imgui\imgui_impl_sdl3.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\..\..\GameDev\imgui\imgui_tables.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\..\..\GameDev\imgui\imgui_widgets.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="LightActor.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -137,36 +140,6 @@
     <ClInclude Include="GuiWindow.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\GameDev\imgui\imconfig.h">
-      <Filter>extras\heaaders</Filter>
-    </ClInclude>
-    <ClInclude Include="C:\GameDev\imgui\imgui.h">
-      <Filter>extras\heaaders</Filter>
-    </ClInclude>
-    <ClInclude Include="C:\GameDev\imgui\imgui_impl_glfw.h">
-      <Filter>extras\heaaders</Filter>
-    </ClInclude>
-    <ClInclude Include="C:\GameDev\imgui\imgui_impl_opengl3.h">
-      <Filter>extras\heaaders</Filter>
-    </ClInclude>
-    <ClInclude Include="C:\GameDev\imgui\imgui_impl_opengl3_loader.h">
-      <Filter>extras\heaaders</Filter>
-    </ClInclude>
-    <ClInclude Include="C:\GameDev\imgui\imgui_impl_sdl3.h">
-      <Filter>extras\heaaders</Filter>
-    </ClInclude>
-    <ClInclude Include="C:\GameDev\imgui\imgui_internal.h">
-      <Filter>extras\heaaders</Filter>
-    </ClInclude>
-    <ClInclude Include="C:\GameDev\imgui\imstb_rectpack.h">
-      <Filter>extras\heaaders</Filter>
-    </ClInclude>
-    <ClInclude Include="C:\GameDev\imgui\imstb_textedit.h">
-      <Filter>extras\heaaders</Filter>
-    </ClInclude>
-    <ClInclude Include="C:\GameDev\imgui\imstb_truetype.h">
-      <Filter>extras\heaaders</Filter>
-    </ClInclude>
     <ClInclude Include="MeshComponent.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -180,6 +153,39 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="SkyboxComponent.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\..\..\GameDev\imgui\imconfig.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\..\..\GameDev\imgui\imgui.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\..\..\GameDev\imgui\imgui_impl_glfw.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\..\..\GameDev\imgui\imgui_impl_opengl3.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\..\..\GameDev\imgui\imgui_impl_opengl3_loader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\..\..\GameDev\imgui\imgui_impl_sdl3.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\..\..\GameDev\imgui\imgui_internal.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\..\..\GameDev\imgui\imstb_rectpack.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\..\..\GameDev\imgui\imstb_textedit.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\..\..\GameDev\imgui\imstb_truetype.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="LightActor.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
