@@ -1,5 +1,6 @@
 #include "CameraActor.h"
 #include "TransformComponent.h"
+#include "imgui.h"
 
 CameraActor::CameraActor(std::weak_ptr<Actor>parent_, float fovy, float aspectRatio, float near, float far, SDL_Window* window_) :
 	Actor(parent_), window(window_)
@@ -26,6 +27,13 @@ Vec3 CameraActor::GetCameraRight() {
 
 void CameraActor::HandleEvents(const SDL_Event& event)
 {
+
+	ImGuiIO& io = ImGui::GetIO();
+	if (io.WantCaptureMouse) {
+		mouseHeld = false; // Ensure we don't get stuck rotating
+		return; 
+	}
+
 	// Handle Mouse Events for Camera Rotation. Checks if the left mouse button is held down
 	if (!m1Override) {
 		if (event.type == SDL_EVENT_MOUSE_BUTTON_DOWN &&

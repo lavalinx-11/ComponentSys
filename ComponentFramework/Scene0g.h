@@ -41,7 +41,8 @@ private:
 	std::string actorColour;
 	std::string actorType;
 	std::vector<std::unique_ptr<Actor>> knightPieces;
-	std::vector<std::shared_ptr<LightActor>> lights;
+	//std::vector<std::shared_ptr<LightActor>> lights;
+	std::unique_ptr<LightActor> lights[5];
 
 	bool isTransitioning = false;
 	float transitionAlpha = 0.0f; // 0.0 to 1.0
@@ -57,7 +58,6 @@ private:
 	int buttonClicks = 0;            // button counter
 	Window* window;
 	SDL_GLContext context;
-
 public:
 	explicit Scene0g();
 	virtual ~Scene0g();
@@ -71,6 +71,7 @@ public:
 	void RenderAll();
 	void RotateKnights(float angleDegrees);
 	void SetupMood(std::string moodName);
+	
 };
 
 

@@ -8,26 +8,29 @@ layout(location = 2) in vec2 uvCoord;
 uniform mat4 modelMatrix;
 uniform mat4 viewMatrix;
 uniform mat4 projectionMatrix;
-uniform vec3 lightPos[5];
-
+uniform vec3 lightPos[5];   
+// Outputs to fragment shader
 layout(location = 0) out vec3 vertNormal;
-layout(location = 1) out vec3 eyeDir; 
-layout(location = 2) out vec2 textureCoords; 
-layout(location = 3) out vec3 lightDir[5]; // Locations 3, 4, 5, 6, 7
+layout(location = 1) out vec3 eyeDir;
+layout(location = 2) out vec2 textureCoords;
+layout(location = 3) out vec3 fragPos;  
 
 void main() {
+    // Texture coords
     textureCoords = uvCoord;
     textureCoords.y *= -1.0;
-    
-    mat3 normalMatrix = mat3(transpose(inverse(viewMatrix * modelMatrix)));
-    vertNormal = normalize(normalMatrix * vNormal); 
 
+    // Compute view-space position
     vec4 viewPos = viewMatrix * modelMatrix * vVertex;
-    vec3 vertPos = viewPos.xyz;
-    eyeDir = -normalize(vertPos);
+    fragPos = viewPos.xyz;
 
-    for (int i = 0; i < 5; i++) {
-        lightDir[i] = normalize(lightPos[i] - vertPos); 
-    }    
+    // Normal in view space
+    mat3 normalMatrix = mat3(transpose(inverse(viewMatrix * modelMatrix)));
+    vertNormal = normalize(normalMatrix * vNormal);
+
+    // Eye direction (camera is at origin in view space)
+    eyeDir = normalize(-fragPos);
+
+    // Final clip position
     gl_Position = projectionMatrix * viewPos;
 }

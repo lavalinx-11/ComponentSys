@@ -48,25 +48,25 @@ bool Scene0g::OnCreate() {
 	camera->AddComponent<TransformComponent>(std::weak_ptr<Component>(), Vec3(0.0f, 0.0f, -15.0f), Quaternion());
 	camera->OnCreate();
 	camera->setCamMovement(true);
-	Ref<LightActor> lightMain = std::make_shared<LightActor>(std::weak_ptr<Actor>(),
-	Vec4(1.0f, 1.0f, 1.0f, 1.0f), // Specular
-	Vec4(0.8f, 0.8f, 0.8f, 1.0f), // Diffuse
-	Vec4(0.1f, 0.1f, 0.1f, 1.0f)// Ambient
-	); 
-	lightMain->OnCreate();
-	lightMain->AddComponent<TransformComponent>(std::weak_ptr<Component>(), Vec3(0.0f, 10.0f, 5.0f), QMath::angleAxisRotation(-90.0f, Vec3(1.0f, 0.0f, 0.0f)));
-	lights.push_back(lightMain);
 
-	for (int i = 1; i < 5; i++)
-	{
-		auto offLight = std::make_shared<LightActor>(std::weak_ptr<Actor>(),
-			Vec4(),
-			Vec4(),
-			Vec4()
-			);
-		offLight->OnCreate();
-		offLight->AddComponent<TransformComponent>(std::weak_ptr<Component>(), Vec3(0,0,0), Quaternion());
-		lights.push_back(offLight);
+	
+	lights[0] = std::make_unique<LightActor>(std::weak_ptr<Actor>(),
+		Vec4(1.0f, 1.0f, 1.0f, 1.0f), // Specular
+		Vec4(0.8f, 0.8f, 0.8f, 1.0f), // Diffuse
+		Vec4(0.1f, 0.1f, 0.1f, 1.0f)  // Ambient
+	);
+	lights[0]->OnCreate();
+	lights[0]->AddComponent<TransformComponent>(std::weak_ptr<Component>(), Vec3(0.0f, 10.0f, 5.0f), Quaternion());
+
+
+	for (int i = 1; i < 5; i++) {
+		lights[i] = std::make_unique<LightActor>(std::weak_ptr<Actor>(),
+			Vec4(0.5f, 0.5f, 0.5f, 1.0f), // Specular
+			Vec4(0.4f, 0.4f, 0.4f, 1.0f), // Diffuse
+			Vec4(0.05f, 0.05f, 0.05f, 1.0f) // Ambient
+		);
+		lights[i]->OnCreate();
+		lights[i]->AddComponent<TransformComponent>(std::weak_ptr<Component>(), Vec3(i * 2.0f, 5.0f, 0.0f), Quaternion());
 	}
 
 	
@@ -187,16 +187,14 @@ bool Scene0g::OnCreate() {
 		actors.emplace(actorName, ActorData{std::move(actorNew), typeOfActor, color});
 
 	}
-
-
-	
-
 	return true;
 }
 
 void Scene0g::OnDestroy() {
 	actors.clear();
-	lights.clear();
+	//lights.clear();
+
+	
 	shader->OnDestroy();
 	board->OnDestroy();
 	camera->OnDestroy();
@@ -223,9 +221,7 @@ void Scene0g::HandleEvents(const SDL_Event &sdlEvent) {
 
 			break;
 		}
-    case SDL_SCANCODE_1: SetupMood("Bright");   break;
-    case SDL_SCANCODE_2: SetupMood("Midnight"); break;
-    case SDL_SCANCODE_3: SetupMood("Sunset");   break;
+			
 		}
 		break;
 
@@ -242,25 +238,100 @@ void Scene0g::HandleEvents(const SDL_Event &sdlEvent) {
 		break;
     }
 }
+void RenderActorRow(const std::string& name, const ActorData& data) {
+	// 1. Give this specific row a unique ID based on the piece name
+	ImGui::PushID(name.c_str()); 
+
+	ImGui::Columns(2, nullptr, false);
+	ImGui::SetColumnWidth(0, ImGui::GetWindowWidth() - 100.0f);
+
+	ImVec4 textColor = (data.colour == "White") ? ImVec4(1, 1, 1, 1) : ImVec4(0.5f, 0.5f, 0.5f, 1);
+	ImGui::TextColored(textColor, "%s", name.c_str());
+    
+	ImGui::NextColumn();
+    
+	// 2. Now this button will actually trigger because its ID is unique
+	if (ImGui::SmallButton("Edit")) {
+		Debug::Info("Button clicked for: " + name, __FILE__, __LINE__);
+		// Place selection logic here
+	}
+    
+	ImGui::Columns(1);
+    
+	// 3. Pop the ID to clean up for the next piece
+	ImGui::PopID();
+}
 
 void Scene0g::RenderGUI()
 {
-	ImVec4 r = ImVec4(1.0f, 0.0f, 0.0f, 1.0f);
-	ImVec4 g = ImVec4(0.0f, 1.0f, 0.0f, 1.0f);
-	ImVec4 b = ImVec4(0.0f, 0.0f, 1.0f, 1.0f);
+	ImGui::SetNextWindowPos(ImVec2(10, 10), ImGuiCond_Always);
+	ImGui::SetNextWindowSize(ImVec2(300, 450), ImGuiCond_Always);
+	ImGui::Begin("Lighting Inspector");
+    
+    if (ImGui::CollapsingHeader("Global Themes")) {
+        if (ImGui::Button("Bright"))   SetupMood("Bright");
+        ImGui::SameLine();
+        if (ImGui::Button("Midnight")) SetupMood("Midnight");
+        ImGui::SameLine();
+        if (ImGui::Button("Sunset"))   SetupMood("Sunset");
+    }
 
-	UIManager::StartInvisibleWindow("TemporarilyUselessWindow", ImVec2(0, 50));
-	UIManager::PushButtonStyle(b, g, r, 5.0f);
+	for (int i = 0; i < 5; i++) {
+		std::string label = "Light " + std::to_string(i);
 
-	if (ImGui::Button("Test")) {
-		r = ImVec4(0.5f, 0.0f, 0.0f, 1.0f);
+		ImGui::PushID(i); 
+
+		if (ImGui::TreeNode(label.c_str())) {
+
+			Vec3 pos = lights[i]->GetComponent<TransformComponent>()->GetPosition();
+			if (ImGui::DragFloat3("Position", &pos.x, 0.1f)) {
+				lights[i]->GetComponent<TransformComponent>()->setPosition(pos);
+			}
+
+			Vec4 diff = lights[i]->GetDiffuse();
+			if (ImGui::ColorEdit3("Diffuse", &diff.x)) {
+				lights[i]->SetDiffuse(diff);
+			}
+
+			float amb = lights[i]->GetAmbient().x;
+			if (ImGui::SliderFloat("Ambient Intensity", &amb, 0.0f, 1.0f)) {
+				lights[i]->SetAmbient(Vec4(amb, amb, amb, 1.0f));
+			}
+
+			ImGui::TreePop();
+		}
+
+		ImGui::PopID(); 
+    }
+    ImGui::End();
+
+    // --- ACTOR OUTLINER SECTION ---
+	ImGui::SetNextWindowPos(ImVec2(window->getWidth() - 320.0f, 10), ImGuiCond_Always);
+	ImGui::SetNextWindowSize(ImVec2(310, 450), ImGuiCond_Always);
+	ImGui::Begin("Scene Outliner");
+	if (ImGui::BeginTabBar("Tabs")) {
+		if (ImGui::BeginTabItem("Chess Pieces")) {
+          
+			if (ImGui::TreeNodeEx("White Team", ImGuiTreeNodeFlags_DefaultOpen)) {
+				for (auto const& pair : actors) {
+					if (pair.second.colour == "White") RenderActorRow(pair.first, pair.second);
+				}
+				ImGui::TreePop();
+			}
+
+			ImGui::Separator();
+          
+			if (ImGui::TreeNodeEx("Black Team", ImGuiTreeNodeFlags_DefaultOpen)) {
+				for (auto const& pair : actors) {
+					if (pair.second.colour == "Black") RenderActorRow(pair.first, pair.second);
+				}
+				ImGui::TreePop();
+			}
+			ImGui::EndTabItem();
+		}
+		ImGui::EndTabBar();
 	}
-
-	if (ImGui::Button("Test Two")) {
-		r = ImVec4(1.0f, 0.0f, 0.0f, 1.0f);
-	}
-	UIManager::PopButtonStyle();
-	UIManager::EndWindow();
+	ImGui::End();
 }
 
 void Scene0g::SetupMood(std::string moodName)
@@ -308,18 +379,18 @@ void Scene0g::SetupMood(std::string moodName)
 void Scene0g::Update(const float deltaTime) {
 	camera->Update(deltaTime);
 	
+	
 	float time = SDL_GetTicks() / 1000.0f; // Seconds since start
 	float radius = 15.0f;
-	float x = cos(time * 0.25f) * radius;
-	float z = sin(time * 0.25f) * radius;
-	lights[0]->GetComponent<TransformComponent>()->setPosition(Vec3(x, 10.0f, z));
+	float x = cos(time * 0.5f) * radius;
+	float z = sin(time * 0.5f) * radius;
+	//lights[0]->GetComponent<TransformComponent>()->setPosition(Vec3(x, 10.0f, z));
 	
 	if (isTransitioning) {
 		transitionAlpha += deltaTime * transitionSpeed;
 		if (transitionAlpha > 1.0f) transitionAlpha = 1.0f;
 
 		for (int i = 0; i < 5; i++) {
-			// LERP formula: Start + (End - Start) * T
 			Vec4 nextDiff = startDiffuse[i] + (targetDiffuse[i] - startDiffuse[i]) * transitionAlpha;
 			Vec4 nextSpec = startSpecular[i] + (targetSpecular[i] - startSpecular[i]) * transitionAlpha;
 			Vec4 nextAmb  = startAmbient[i]  + (targetAmbient[i]  - startAmbient[i])  * transitionAlpha;
@@ -333,7 +404,8 @@ void Scene0g::Update(const float deltaTime) {
 
 		if (transitionAlpha >= 1.0f) isTransitioning = false;
 	}
-	/*//Board Rotation
+	
+	//Board Rotation
 	float rotationSpeed = 10.0f;
 	float frameRotation = rotationSpeed * deltaTime;
 	Quaternion rota = QMath::angleAxisRotation(frameRotation, Vec3(0.0f, 1.0f, 0.0f));
@@ -341,7 +413,7 @@ void Scene0g::Update(const float deltaTime) {
 	Ref<TransformComponent> boardTransform = board->GetComponent<TransformComponent>();
 	if (boardTransform) {
 		boardTransform->SetOrientation(boardTransform->GetOrientation() *= rota);
-	}*/
+	}
 
 }
 
@@ -355,25 +427,28 @@ void Scene0g::Render() const {
     glUseProgram(shader->GetProgram());
     glUniformMatrix4fv(static_cast<GLint>(shader->GetUniformID("projectionMatrix")), 1, GL_FALSE, camera->GetProjectionMatrix());
     glUniformMatrix4fv(static_cast<GLint>(shader->GetUniformID("viewMatrix")), 1, GL_FALSE, camera->GetViewMatrix());
+	for (int i = 0; i < 5; i++) {
+		// Get view space position
+		Vec3 worldPos = lights[i]->GetComponent<TransformComponent>()->GetPosition();
+		Vec4 viewPos = camera->GetViewMatrix() * Vec4(worldPos.x, worldPos.y, worldPos.z, 1.0f);
+		Vec3 lightPosVS = Vec3(viewPos.x, viewPos.y, viewPos.z);
 
-  
-    for (int i = 0; i < 5; i++) {
-       Vec3 worldPos = lights[i]->GetComponent<TransformComponent>()->GetPosition();
-       Vec4 viewPos = camera->GetViewMatrix() * Vec4(worldPos.x, worldPos.y, worldPos.z, 1.0f);
-       Vec3 lightPosVS = Vec3(viewPos.x, viewPos.y, viewPos.z);
-
-       std::string posName = "lightPos[" + std::to_string(i) + "]";
-       std::string diffName = "Diffuse[" + std::to_string(i) + "]";
-       std::string specName = "Specular[" + std::to_string(i) + "]";
-       std::string ambName = "Ambient[" + std::to_string(i) + "]";
-
-       glUniform3fv(shader->GetUniformID(posName), 1, &lightPosVS[0]);
-       glUniform4fv(shader->GetUniformID(diffName), 1, &lights[i]->GetDiffuse()[0]);
-       glUniform4fv(shader->GetUniformID(specName), 1, &lights[i]->GetSpecular()[0]);
-       glUniform4fv(shader->GetUniformID(ambName), 1, &lights[i]->GetAmbient()[0]);
-    }
+		// Explicitly check for the ID before uploading
+		std::string name = "lightPos[" + std::to_string(i) + "]";
+		GLint loc = shader->GetUniformID(name);
     
-
+		if (loc != -1) {
+			glUniform3fv(loc, 1, &lightPosVS[0]);
+			glUniform4fv(shader->GetUniformID("Diffuse[" + std::to_string(i) + "]"), 1, &lights[i]->GetDiffuse()[0]);
+			glUniform4fv(shader->GetUniformID("Specular[" + std::to_string(i) + "]"), 1, &lights[i]->GetSpecular()[0]);
+			glUniform4fv(shader->GetUniformID("Ambient[" + std::to_string(i) + "]"), 1, &lights[i]->GetAmbient()[0]);
+		} else if (i == 1) {
+			// This will tell us if it's still missing even with unique_ptrs
+			static bool warned = false;
+			if(!warned) { std::cout << "Warning: lightPos[1] still not found!" << std::endl; warned = true; }
+		}
+	}
+	
     glUniformMatrix4fv(static_cast<GLint>(shader->GetUniformID("modelMatrix")), 1, GL_FALSE, board->GetComponent<TransformComponent>()->GetTransformMatrix());
     glBindTexture(GL_TEXTURE_2D, board->GetComponent<MaterialComponent>()->getTextureID());
     board->GetComponent<MeshComponent>()->Render();
