@@ -10,10 +10,9 @@
 #include "ShaderComponent.h"
 #include "MeshComponent.h"
 #include "MaterialComponent.h"
+#include "LightActor.h"
 /// Forward declarations 
 union SDL_Event;
-
-
 
 
 enum PieceType
@@ -31,18 +30,27 @@ struct ActorData
 	PieceType actorType;
 	std::string colour;
 };
+
 class Scene0g : public Scene {
 private:
 	Ref<ShaderComponent> shader;
 	Ref<Actor> board;
-	Ref<CameraActor> camera; 
-
+	Ref<CameraActor> camera;
 	std::unordered_map<std::string, ActorData> actors; 
 	std::string actorName; 
 	std::string actorColour;
 	std::string actorType;
-	std::vector<std::unique_ptr<Actor>> allPieces;
 	std::vector<std::unique_ptr<Actor>> knightPieces;
+	std::vector<std::shared_ptr<LightActor>> lights;
+
+	bool isTransitioning = false;
+	float transitionAlpha = 0.0f; // 0.0 to 1.0
+	float transitionSpeed = 0.5f; // 1.0 = 1 second, 0.5 = 2 seconds
+	Vec4 startDiffuse[5], startSpecular[5], startAmbient[5];
+	Vec3 startPos[5];
+	Vec4 targetDiffuse[5], targetSpecular[5], targetAmbient[5];
+	Vec3 targetPos[5];
+	
 	bool drawInWireMode;
 	bool showImGuiDemoWindow = true; // optional for testing
 	char textBuffer[256] = "";       // input text buffer
@@ -62,6 +70,7 @@ public:
 	virtual void RenderGUI() override;
 	void RenderAll();
 	void RotateKnights(float angleDegrees);
+	void SetupMood(std::string moodName);
 };
 
 
