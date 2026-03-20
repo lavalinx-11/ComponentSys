@@ -1,5 +1,5 @@
 #include <iostream>
-#include "TransformComponent.h"
+#include "Components/TransformComponent.h"
 #include "QMath.h"
 #include "MMath.h"
 using namespace MATH;

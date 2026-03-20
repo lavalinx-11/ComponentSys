@@ -1,5 +1,5 @@
-#include "CameraActor.h"
-#include "TransformComponent.h"
+#include "Actors/CameraActor.h"
+#include "Components/TransformComponent.h"
 #include "imgui.h"
 
 CameraActor::CameraActor(std::weak_ptr<Actor>parent_, float fovy, float aspectRatio, float near, float far, SDL_Window* window_) :

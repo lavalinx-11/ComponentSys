@@ -8,7 +8,7 @@
 #include <QMath.h>
 #include <SDL3/SDL.h>
 #include <SDL3_image/SDL_image.h>
-#include "SkyboxComponent.h"
+#include "Components/SkyboxComponent.h"
 
 using namespace MATH;
 class CameraActor : public Actor {

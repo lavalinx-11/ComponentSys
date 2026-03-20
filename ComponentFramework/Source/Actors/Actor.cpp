@@ -1,5 +1,5 @@
-#include "Actor.h"
-#include "Debug.h"
+#include "Actors/Actor.h"
+#include "Engine/Debug.h"
 #include <MMath.h>
 Actor::Actor(std::weak_ptr<Component> parent_): Component(parent_) {}
 

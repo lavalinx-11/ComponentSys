@@ -2,18 +2,18 @@
 #include <iostream>
 #include <cstdlib>
 #include <SDL3/SDL.h>
-#include "Scene0g.h"
+#include "Scenes/Scene0g.h"
 #include <MMath.h>
 #include <QMath.h>
-#include "Debug.h"
-#include "GuiWindow.h"
-#include "MaterialComponent.h"
-#include "MeshComponent.h"
-#include "ShaderComponent.h"
-#include "TransformComponent.h"
+#include "Engine/Debug.h"
+#include "Engine/GuiWindow.h"
+#include "Components/MaterialComponent.h"
+#include "Components/MeshComponent.h"
+#include "Components/ShaderComponent.h"
+#include "Components/TransformComponent.h"
 #include <map>
 ///ImGui includes
-#include "UIManager.h"
+#include "Engine/UIManager.h"
 
 
 Scene0g::Scene0g() :
@@ -27,6 +27,31 @@ context{ nullptr }
 Scene0g::~Scene0g() {
 	Debug::Info("Deleted Scene0: ", __FILE__, __LINE__);
 }
+
+
+/*
+ HELLO SCOTT, SORRY FOR THE LATE SUBMISSION I WAS GETTING MY SHIT TOGETHER
+ As stated previously here is a input map so you don't get lost.
+ 
+ 
+				<-CAMERA MOVEMENT->
+ Left Click + Mouse Movement = camera rotations 
+ W = Move Forward
+ A = Move Left
+ S = Move Backward
+ D = Move Right
+ Q = Move Up
+ E = Move Down
+ 
+				<-BOARD MOVEMENT->
+J = Move Board Forward
+K = Move Board Backward
+ 
+ I have 2 ImGui windows, one to manipulate my lights and another to manipulate the pieces. 
+ There is also a toggle to rotate the board where the piece selector is.
+ */
+
+
 
 // Supporting function to convert strings to pieces to prevent an obnoxious render call in render
 PieceType StringToPieceType(const std::string& typeStr) {

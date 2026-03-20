@@ -3,8 +3,8 @@
 #include <crtdbg.h>
 
 #include <string>
-#include "SceneManager.h"
-#include "Debug.h"
+#include "Scenes/SceneManager.h"
+#include "Engine/Debug.h"
 
   
 int main(int argc, char* args[]) {

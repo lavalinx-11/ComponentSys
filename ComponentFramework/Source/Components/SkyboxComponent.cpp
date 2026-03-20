@@ -1,8 +1,8 @@
-﻿#include "SkyboxComponent.h"
-#include "Component.h"
+﻿#include "Components/SkyboxComponent.h"
+#include "Components/Component.h"
 #include <SDL3/SDL.h>
 #include <SDL3_image/SDL_image.h>
-#include "Debug.h"
+#include "Engine/Debug.h"
 SkyboxComponent::SkyboxComponent(std::weak_ptr<Component> parent_,
 	const char* posXFileName_, const char* posYFileName_,
 	const char* posZFileName_, const char* negXFileName_,

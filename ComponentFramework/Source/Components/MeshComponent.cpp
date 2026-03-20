@@ -1,7 +1,7 @@
-#include "MeshComponent.h"
+#include "Components/MeshComponent.h"
 
 #define TINYOBJLOADER_IMPLEMENTATION
-#include "tiny_obj_loader.h"
+#include "Engine/tiny_obj_loader.h"
 
 
 

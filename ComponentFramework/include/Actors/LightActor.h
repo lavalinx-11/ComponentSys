@@ -1,7 +1,7 @@
 ﻿#pragma once
 #include <VMath.h>
 #include "Actor.h"
-#include "TransformComponent.h"
+#include "Components/TransformComponent.h"
 using namespace MATH;
 
 class LightActor : public Actor

@@ -1,10 +1,10 @@
 #include <SDL.h>
-#include "SceneManager.h"
-#include "Timer.h"
-#include "Window.h"
-#include "Scene0g.h"
-#include "GuiWindow.h"
-#include "UIManager.h"
+#include "Scenes/SceneManager.h"
+#include "Engine/Timer.h"
+#include "Engine/Window.h"
+#include "Scenes/Scene0g.h"
+#include "Engine/GuiWindow.h"
+#include "Engine/UIManager.h"
 SceneManager::SceneManager(): 
 	currentScene{nullptr}, window{nullptr}, timer{nullptr},
 	fps(144), isRunning{ false }, fullScreen{ false }, imguiWin{ nullptr } {

@@ -1,4 +1,4 @@
-﻿#include "LightActor.h"
+﻿#include "Actors/LightActor.h"
 LightActor::LightActor(std::weak_ptr<Actor> parent_, Vec4 specular_, Vec4 diffuse_, Vec4 ambient_)
     : Actor(parent_), Specular(specular_), Diffuse(diffuse_), Ambient(ambient_) {
  

@@ -1,9 +1,9 @@
 #pragma once
 #include <vector>
 #include <iostream>
-#include "Component.h"
-#include "TransformComponent.h"
-#include <MMath.h>
+#include "Components/Component.h"
+#include "Components/TransformComponent.h"	
+#include <MMath.h>	
 
 class Actor : public Component {
 	Actor(const Actor&) = delete;

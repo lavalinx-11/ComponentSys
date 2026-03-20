@@ -3,14 +3,13 @@
 #include "Scene.h"
 #include "Vector.h"
 #include <Matrix.h>
-#include "Actor.h"
 #include <unordered_map>
-#include "CameraActor.h"
-#include "Window.h"
-#include "ShaderComponent.h"
-#include "MeshComponent.h"
-#include "MaterialComponent.h"
-#include "LightActor.h"
+#include "Actors/Actor.h"
+#include "Actors/CameraActor.h"
+#include "Actors/LightActor.h"
+#include "Engine/Window.h"
+#include "Components/ShaderComponent.h"
+#include "Components/MeshComponent.h"
 /// Forward declarations 
 union SDL_Event;
 

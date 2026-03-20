@@ -1,25 +1,25 @@
-Fri Mar 20 02:50:27 2026
+Fri Mar 20 12:14:06 2026
 [INFO]: Starting the SceneManager
-[INFO]: OpenGL version: 4.6.0 Compatibility Profile Context 26.2.2.260209
-[INFO]: Graphics card vendor: ATI Technologies Inc.
-[INFO]: Graphics card name: AMD Radeon RX 9060 XT
-[INFO]: GLSL Version: 4.60
+[INFO]: OpenGL version: 4.6.0 NVIDIA 591.44
+[INFO]: Graphics card vendor: NVIDIA Corporation
+[INFO]: Graphics card name: NVIDIA GeForce RTX 3050 Laptop GPU/PCIe/SSE2
+[INFO]: GLSL Version: 4.60 NVIDIA
 [INFO]: Created Scene0: 
 [INFO]: Uniforms:
-"viewMatrix" loc:30
-"modelMatrix" loc:21
-"projectionMatrix" loc:26
-"myTexture" loc:25
-"lightPos[0]" loc:16
 "Ambient[0]" loc:0
 "Diffuse[0]" loc:5
 "Specular[0]" loc:10
 "highlightIntensity" loc:15
+"lightPos[0]" loc:16
+"modelMatrix" loc:21
+"myTexture" loc:22
+"projectionMatrix" loc:23
+"viewMatrix" loc:24
 
 [INFO]: Uniforms:
 "projectionMatrix" loc:0
-"viewMatrix" loc:1
 "skybox" loc:3
+"viewMatrix" loc:1
 
 [INFO]: Loading assets for Actor: 
 [INFO]: Loading assets for Actor: 
