@@ -1,4 +1,4 @@
-Wed Mar 18 21:28:54 2026
+Fri Mar 20 02:50:27 2026
 [INFO]: Starting the SceneManager
 [INFO]: OpenGL version: 4.6.0 Compatibility Profile Context 26.2.2.260209
 [INFO]: Graphics card vendor: ATI Technologies Inc.
@@ -6,14 +6,20 @@ Wed Mar 18 21:28:54 2026
 [INFO]: GLSL Version: 4.60
 [INFO]: Created Scene0: 
 [INFO]: Uniforms:
-"viewMatrix" loc:29
-"modelMatrix" loc:20
-"lightPos[0]" loc:15
-"projectionMatrix" loc:25
-"myTexture" loc:24
+"viewMatrix" loc:30
+"modelMatrix" loc:21
+"projectionMatrix" loc:26
+"myTexture" loc:25
+"lightPos[0]" loc:16
 "Ambient[0]" loc:0
 "Diffuse[0]" loc:5
 "Specular[0]" loc:10
+"highlightIntensity" loc:15
+
+[INFO]: Uniforms:
+"projectionMatrix" loc:0
+"viewMatrix" loc:1
+"skybox" loc:3
 
 [INFO]: Loading assets for Actor: 
 [INFO]: Loading assets for Actor: 
@@ -53,7 +59,6 @@ Wed Mar 18 21:28:54 2026
 [INFO]: Loading assets for Actor: 
 [INFO]: Loading assets for Actor: 
 [INFO]: Loading assets for Actor: 
-[WARNING]: lightPos[1] :No such uniform name in file: C:\Users\laval\OneDrive\Documents\SourceTreeRepos\ComonentSys\ComponentFramework\ShaderComponent.cpp on line: 252
 [INFO]: Deleting the SceneManager
 [INFO]: Deleting assets for Actor: 
 [INFO]: Deleting assets for Actor: 
@@ -89,11 +94,11 @@ Wed Mar 18 21:28:54 2026
 [INFO]: Deleting assets for Actor: 
 [INFO]: Deleting assets for Actor: 
 [INFO]: Deleting assets for Actor: 
-[INFO]: Deleting assets for Actor: 
-[INFO]: Deleting assets for Actor: 
-[INFO]: Deleting assets for Actor: 
-[INFO]: Deleting assets for Actor: 
-[INFO]: Deleting assets for Actor: 
 [INFO]: Deleted Scene0: 
+[INFO]: Deleting assets for Actor: 
+[INFO]: Deleting assets for Actor: 
+[INFO]: Deleting assets for Actor: 
+[INFO]: Deleting assets for Actor: 
+[INFO]: Deleting assets for Actor: 
 [INFO]: Deleting assets for Actor: 
 [INFO]: Deleting assets for Actor: 

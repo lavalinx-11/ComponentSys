@@ -8,6 +8,7 @@
 #include <QMath.h>
 #include <SDL3/SDL.h>
 #include <SDL3_image/SDL_image.h>
+#include "SkyboxComponent.h"
 
 using namespace MATH;
 class CameraActor : public Actor {
@@ -26,6 +27,7 @@ private:
 	bool canCamMove = false;
 	bool m1Override = false;
 	Vec3 position;
+	std::unique_ptr<SkyboxComponent> skybox;
 	SDL_Window* window;
 public:
 	CameraActor( std::weak_ptr<Actor>parent_, float fovy, float aspectRatio, float near, float far, SDL_Window* window_);
@@ -47,4 +49,8 @@ public:
 	void HandleEvents(const SDL_Event& event);
 	void UpdateViewMatrix();
 	void Update(const float deltaTime);
+	bool SkyboxSetup(const char* posXFileName_, const char* posYFileName_, const char* posZFileName_, const char* negXFileName_, const char*
+		negYFileName_, const char* negZFileName_);
+	int GetSkyTexID() { return skybox->GetTexture(); }
+	void  RenderSkybox() const;
 };

@@ -40,10 +40,11 @@ private:
 	std::string actorName; 
 	std::string actorColour;
 	std::string actorType;
+	std::string selectedActorName = "";
 	std::vector<std::unique_ptr<Actor>> knightPieces;
-	//std::vector<std::shared_ptr<LightActor>> lights;
 	std::unique_ptr<LightActor> lights[5];
-
+	bool canBoardSpin = false;
+	
 	bool isTransitioning = false;
 	float transitionAlpha = 0.0f; // 0.0 to 1.0
 	float transitionSpeed = 0.5f; // 1.0 = 1 second, 0.5 = 2 seconds
@@ -70,7 +71,7 @@ public:
 	virtual void RenderGUI() override;
 	void RenderAll();
 	void RotateKnights(float angleDegrees);
-	void SetupMood(std::string moodName);
+	void SetupTheme(std::string themeName);
 	
 };
 

@@ -133,3 +133,35 @@ bool CameraActor::OnCreate() {
 
 		UpdateViewMatrix();
 	}
+
+bool CameraActor::SkyboxSetup(const char* posXFileName_, const char* posYFileName_, const char* posZFileName_,
+	const char* negXFileName_, const char* negYFileName_, const char* negZFileName_)
+{
+	skybox = std::make_unique<SkyboxComponent>(std::weak_ptr<Component>(),
+		posXFileName_,posYFileName_,
+		posZFileName_, negXFileName_,
+		negYFileName_, negZFileName_);
+	if (skybox->OnCreate() == false) {
+		return false;
+	}
+	return true;
+}
+
+void CameraActor::RenderSkybox() const
+{
+	if (skybox == nullptr) return;
+	//depth test makes it so the things farther away are aren't drawn or shown
+	glDisable(GL_CULL_FACE);//turns off depth test so that things that are within it are visible
+	//cull face is a way of performance gain in opengl. "If you're seeing a texture/triangle that's going clockwise then it's backwards so it doesn't draw it to save performance
+	glDisable(GL_DEPTH_TEST);
+	glUseProgram(skybox->GetShader()->GetProgram());//goes through the skybox class to get the program id and turn on the shader
+	glUniformMatrix4fv(skybox->GetShader()->GetUniformID("projectionMatrix"), 1, GL_FALSE, projectionMatrix);//gets the projection matrix
+	glUniformMatrix4fv(skybox->GetShader()->GetUniformID("viewMatrix"), 1, GL_FALSE,
+		MMath::toMatrix4(QMath::conjugate(orientation)));		/// they are, then draw the cube.  
+	skybox->Render();
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_CULL_FACE);
+	glUseProgram(0);
+}
+
+

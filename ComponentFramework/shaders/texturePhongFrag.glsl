@@ -12,35 +12,24 @@ uniform vec3 lightPos[5];
 uniform vec4 Specular[5]; 
 uniform vec4 Diffuse[5]; 
 uniform vec4 Ambient[5]; 
+uniform float highlightIntensity;
 
 uniform sampler2D myTexture; 
 
 void main() {
     vec4 kt = texture(myTexture, textureCoords); 
-    
     vec4 totalLight = vec4(0.0);
-    
     vec3 n = normalize(vertNormal);
     vec3 e = normalize(eyeDir);
 
     for(int i = 0; i < 5; i++) {
-
-        // Light direction from fragment → light
         vec3 l = normalize(lightPos[i] - fragPos);
-
-        // Diffuse
         float diff = max(dot(n, l), 0.0);
-
-        // Specular
         vec3 reflection = reflect(-l, n);
         float spec = pow(max(dot(e, reflection), 0.0), 14.0);
-
-        // Accumulate ALL components
-        totalLight += Ambient[i] 
-                    + (diff * Diffuse[i]) 
-                    + (spec * Specular[i]);
+        totalLight += Ambient[i]  + (diff * Diffuse[i]) + (spec * Specular[i]);
     }
 
-    fragColor = clamp(totalLight, 0.0, 1.0) * kt;
-//fragColor = vec4(lightPos[1], 1.0);
+vec4 finalLight = clamp(totalLight, 0.0, 1.0) * kt;
+    fragColor = finalLight * highlightIntensity;
 }

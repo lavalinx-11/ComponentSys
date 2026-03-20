@@ -150,6 +150,7 @@
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="Scene0g.cpp" />
     <ClCompile Include="ShaderComponent.cpp" />
+    <ClCompile Include="SkyboxComponent.cpp" />
     <ClCompile Include="Timer.cpp" />
     <ClCompile Include="TransformComponent.cpp" />
     <ClCompile Include="UIManager.cpp" />
@@ -179,7 +180,6 @@
     <ClInclude Include="Scene0g.h" />
     <ClInclude Include="ShaderComponent.h" />
     <ClInclude Include="SkyboxComponent.h" />
-    <ClInclude Include="TextureComponent.h" />
     <ClInclude Include="Timer.h" />
     <ClInclude Include="tiny_obj_loader.h" />
     <ClInclude Include="TransformComponent.h" />
@@ -194,6 +194,10 @@
     <None Include="shaders\defaultVert.glsl" />
     <None Include="shaders\texturePhongFrag.glsl" />
     <None Include="shaders\texturePhongVert.glsl" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="shaders\skyboxFrag.glsl" />
+    <Content Include="shaders\skyboxVert.glsl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
