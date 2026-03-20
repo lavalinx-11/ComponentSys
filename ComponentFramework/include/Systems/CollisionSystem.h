@@ -10,6 +10,7 @@ using namespace MATHEX;
 
 class CollisionSystem {
 private:
+    
     std::vector<Ref<Actor>> collidingActors;
 public:
     /// This function will check the the actor being added is new and has the all proper components 
@@ -29,6 +30,7 @@ public:
     bool CollisionDetection(const Sphere &s1, const Sphere &s2) const; 
     bool CollisionDetection(const AABB &bb1, const AABB &bb2) const; 
     bool CollisionDetection(const Sphere s1, const Plane p1) const;
+    void SphereSphereCollisionResponse(Sphere s1, Ref<PhysicsComponent> pc1, Sphere s2, Ref<PhysicsComponent> pc2);
     void Update(const float deltaTime);
 	
 };
