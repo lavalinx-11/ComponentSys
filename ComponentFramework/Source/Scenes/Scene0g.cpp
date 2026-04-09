@@ -11,6 +11,7 @@
 #include "Components/MeshComponent.h"
 #include "Components/ShaderComponent.h"
 #include "Components/TransformComponent.h"
+#include "Components/PhysicsComponent.h"
 #include <map>
 ///ImGui includes
 #include "Engine/UIManager.h"
@@ -83,6 +84,7 @@ bool Scene0g::OnCreate() {
 			"textures/spaceNZ.png"
 	);
 
+	collisionSystem = std::make_unique<CollisionSystem>();
 	
 	/*							<-LIGHT INITIALIZATION->							*/
 	lights[0] = std::make_unique<LightActor>(std::weak_ptr<Actor>(),
@@ -201,6 +203,8 @@ bool Scene0g::OnCreate() {
 		actorNew->AddComponent<TransformComponent>(std::weak_ptr<Component>(), finalPos, Quaternion(), Vec3(0.125f, 0.125f, 0.125f));
 		Quaternion rot = QMath::angleAxisRotation(90.0f, Vec3(1.0f, 0.0f, 0.0f));
 		actorNew->GetComponent<TransformComponent>()->SetOrientation(actorNew->GetComponent<TransformComponent>()->GetOrientation() *= rot);
+		actorNew->AddComponent<CollisionComponent>(std::weak_ptr<Component>(), 1.2f);
+		actorNew->AddComponent<PhysicsComponent>(std::weak_ptr<Component>());
 
 		// Rotate the white knights as they face the opposite direction by default
 		actorNew->OnCreate();
@@ -220,6 +224,7 @@ void Scene0g::OnDestroy() {
 	board->OnDestroy();
 	camera->OnDestroy();
 	window->OnDestroy();
+	collisionSystem.reset();
 	delete window;
 }
 
@@ -242,7 +247,30 @@ void Scene0g::HandleEvents(const SDL_Event &sdlEvent) {
 
 			break;
 		}
-			
+    case SDL_SCANCODE_LEFT:
+			{
+				auto it = actors.find(selectedActorName);
+
+				if (it != actors.end()) 
+				{
+					ActorData& selectedPiece = it->second;
+					selectedPiece.actor->GetComponent<TransformComponent>()
+					->setPosition(selectedPiece.actor->GetComponent<TransformComponent>()->GetPosition() + Vec3(1.25f, 0.0f, 0.0f));
+				}
+				break;
+			}
+    case SDL_SCANCODE_RIGHT:
+			{
+				auto it = actors.find(selectedActorName);
+
+				if (it != actors.end()) 
+				{
+					ActorData& selectedPiece = it->second;
+					selectedPiece.actor->GetComponent<TransformComponent>()
+					->setPosition(selectedPiece.actor->GetComponent<TransformComponent>()->GetPosition() + Vec3(-1.25f, 0.0f, 0.0f));
+				}
+				break;
+			}
 		}
 		break;
 
@@ -373,6 +401,26 @@ void Scene0g::RenderGUI()
 	}
 	ImGui::End();
 }
+
+
+
+void Scene0g::PieceMovement(std::string pieceName, SDL_Event& sdlEvent)
+{
+	
+	for (const auto& pair : actors) {
+		const std::string& name = pair.first;
+		Actor* piece = pair.second.actor.get();
+
+		float intensity = (name == selectedActorName) ? 2.5f : 1.0f;
+		glUniform1f(shader->GetUniformID("highlightIntensity"), intensity);
+    	
+		
+		
+	}
+	
+}
+
+
 //					<-PRESET LIGHTING THEMES->					//
 void Scene0g::SetupTheme(std::string themeName)
 {

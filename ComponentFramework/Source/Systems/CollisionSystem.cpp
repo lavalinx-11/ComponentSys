@@ -3,6 +3,30 @@
 
 using namespace  MATH;
 
+bool CollisionSystem::CollisionDetection(const Sphere& s1, const Sphere& s2) const
+{
+    float distanceX = s1.center.x - s2.center.x;
+    float distanceY = s1.center.y - s2.center.y;
+    float distanceZ = s1.center.z - s2.center.z;
+    
+    float squaredDistance = (distanceX * distanceX) + (distanceY * distanceY) + (distanceZ * distanceZ);
+    float radiusTotal = s1.r + s2.r;
+    
+    return squaredDistance <= radiusTotal * radiusTotal;
+    
+}
+
+/*bool CollisionSystem::CollisionDetection(const AABB& bb1, const AABB& bb2) const
+{
+    
+}*/
+
+/*bool CollisionSystem::CollisionDetection(const Sphere s1, const Plane p1) const
+{
+    
+}*/
+
+
 void CollisionSystem::SphereSphereCollisionResponse(Sphere s1, Ref<PhysicsComponent> pc1, Sphere s2, Ref<PhysicsComponent> pc2) {
     float e = 1.0f; /// coefficient of restitution
     Vec3 L = s1.center - s2.center;

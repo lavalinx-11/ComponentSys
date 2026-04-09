@@ -10,7 +10,7 @@ enum class ColliderType {
 	
 };
 
-/// For an Axis Aligned Bounding Box, their are many ways you could define the box.
+/// For an Axis Aligned Bounding Box, there are many ways you could define the box.
 /// My favorite way, the easiest to understand way is pick the center location of 
 /// the box, then specify the radius from that center in 
 /// the x, y,and z dimensions. Umer calls the radius the halfExtent
@@ -32,9 +32,9 @@ protected:
 	Plane plane; /// Plane 
 
 public:
-	CollisionComponent(Component* parent_, float radius_ );
-	CollisionComponent(Component* parent_, Vec3 halfExtents_);
-	CollisionComponent(Component* parent_, Plane plane_);
+	CollisionComponent(std::weak_ptr<Component> parent_, float radius_ );
+	CollisionComponent(std::weak_ptr<Component> parent_, Vec3 halfExtents_);
+	CollisionComponent(std::weak_ptr<Component> parent_, Plane plane_);
 	bool OnCreate(){return true;}
 	void OnDestroy(){}
 	void Update(const float deltaTime_){}

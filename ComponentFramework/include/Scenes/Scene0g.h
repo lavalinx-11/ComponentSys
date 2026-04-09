@@ -10,6 +10,7 @@
 #include "Engine/Window.h"
 #include "Components/ShaderComponent.h"
 #include "Components/MeshComponent.h"
+#include "Systems/CollisionSystem.h"
 /// Forward declarations 
 union SDL_Event;
 
@@ -43,7 +44,7 @@ private:
 	std::vector<std::unique_ptr<Actor>> knightPieces;
 	std::unique_ptr<LightActor> lights[5];
 	bool canBoardSpin = false;
-	
+	std::unique_ptr<CollisionSystem> collisionSystem;
 	bool isTransitioning = false;
 	float transitionAlpha = 0.0f; // 0.0 to 1.0
 	float transitionSpeed = 0.5f; // 1.0 = 1 second, 0.5 = 2 seconds
@@ -68,8 +69,7 @@ public:
 	virtual void Render() const override;
 	virtual void HandleEvents(const SDL_Event &sdlEvent) override;
 	virtual void RenderGUI() override;
-	void RenderAll();
-	void RotateKnights(float angleDegrees);
+	void PieceMovement(std::string pieceName, SDL_Event &sdlEvent);
 	void SetupTheme(std::string themeName);
 	
 };
