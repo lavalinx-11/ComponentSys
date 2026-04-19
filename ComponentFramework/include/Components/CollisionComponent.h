@@ -1,6 +1,7 @@
 #pragma once
 #include "TransformComponent.h"
 #include <Plane.h>
+#include <Sphere.h>
 using namespace MATHEX;
 
 enum class ColliderType {
@@ -29,8 +30,8 @@ protected:
 	ColliderType colliderType;  
 	float radius; /// Sphere collision
 	Vec3 halfExtents; /// AABB
-	Plane plane; /// Plane 
-
+	Plane plane; /// Plane
+	Sphere sphere;
 public:
 	CollisionComponent(std::weak_ptr<Component> parent_, float radius_ );
 	CollisionComponent(std::weak_ptr<Component> parent_, Vec3 halfExtents_);
@@ -39,4 +40,7 @@ public:
 	void OnDestroy(){}
 	void Update(const float deltaTime_){}
 	void Render()const{}
+
+	Sphere GetSphere(){return sphere;}
+	void SetSphere(const Vec3& center, const float& r) { sphere.center = center; sphere.r = r; }
 };

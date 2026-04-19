@@ -25,7 +25,6 @@ bool TransformComponent::OnCreate() {
 void TransformComponent::OnDestroy() {}
 
 void TransformComponent::Update(const float deltaTime) {
-	std::cout << "Hello from Update " << deltaTime << '\n';
 }
 
 void TransformComponent::Render() const {}

@@ -1,4 +1,4 @@
-﻿#include "Systems/CollisionSystem.h"
+﻿#include "Components/CollSystem.h"
 #include "VMath.h"
 
 using namespace  MATH;
@@ -39,12 +39,17 @@ void CollisionSystem::SphereSphereCollisionResponse(Sphere s1, Ref<PhysicsCompon
     float v1p = VMath::dot(v1, n);
     float v2p = VMath::dot(v2, n);
 
-    if(v1p - v2p > 0.0f) { /// The colliding objects are not yet free from one and another, come back next cycle
+    /*if(v1p - v2p > 0.0f) { 
         return;
-    }
+    }*/
     float v1p_new = (((m1 - e * m2) * v1p) + ((1.0f + e) * m2 * v2p)) / (m1 + m2);
     float v2p_new = (((m2 - e * m1) * v2p) + ((1.0f + e) * m1 * v1p)) / (m1 + m2);
 
     pc1->GetVelocity() = v1 + (v1p_new - v1p) * n;
     pc2->GetVelocity() = v2 + (v2p_new - v2p) * n;
+}
+
+void CollisionSystem::Update(const float deltaTime)
+{
+    
 }

@@ -26,8 +26,7 @@ public:
 	virtual bool OnCreate() override;
 	virtual void Render() const override;
 	virtual void OnDestroy() override;
-	virtual void Update(const float deltaTime_) override; // Add this!
-	
+	virtual void Update(const float deltaTime_) override;
 	ShaderComponent* GetShader() const { return skyShader.get(); }
 	virtual int GetTexture() const { return textureID; }
 

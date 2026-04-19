@@ -11,7 +11,6 @@
 #include "Components/MeshComponent.h"
 #include "Components/ShaderComponent.h"
 #include "Components/TransformComponent.h"
-#include "Components/PhysicsComponent.h"
 #include <map>
 ///ImGui includes
 #include "Engine/UIManager.h"
@@ -31,10 +30,7 @@ Scene0g::~Scene0g() {
 
 
 /*
- HELLO SCOTT, SORRY FOR THE LATE SUBMISSION I WAS GETTING MY SHIT TOGETHER
- As stated previously here is a input map so you don't get lost.
- 
- 
+
 				<-CAMERA MOVEMENT->
  Left Click + Mouse Movement = camera rotations 
  W = Move Forward
@@ -203,9 +199,11 @@ bool Scene0g::OnCreate() {
 		actorNew->AddComponent<TransformComponent>(std::weak_ptr<Component>(), finalPos, Quaternion(), Vec3(0.125f, 0.125f, 0.125f));
 		Quaternion rot = QMath::angleAxisRotation(90.0f, Vec3(1.0f, 0.0f, 0.0f));
 		actorNew->GetComponent<TransformComponent>()->SetOrientation(actorNew->GetComponent<TransformComponent>()->GetOrientation() *= rot);
-		actorNew->AddComponent<CollisionComponent>(std::weak_ptr<Component>(), 1.2f);
-		actorNew->AddComponent<PhysicsComponent>(std::weak_ptr<Component>());
+		actorNew->AddComponent<CollisionComponent>(std::weak_ptr<Component>(), 0.32f);
+		actorNew->AddComponent<PhysicsComponent>(std::weak_ptr<Component>(), 1.0f);
+		actorNew->GetComponent<PhysicsComponent>()->SetTransform(actorNew->GetComponent<TransformComponent>());
 
+		
 		// Rotate the white knights as they face the opposite direction by default
 		actorNew->OnCreate();
 		if (type == "Knight" && color == "White") {
@@ -254,8 +252,8 @@ void Scene0g::HandleEvents(const SDL_Event &sdlEvent) {
 				if (it != actors.end()) 
 				{
 					ActorData& selectedPiece = it->second;
-					selectedPiece.actor->GetComponent<TransformComponent>()
-					->setPosition(selectedPiece.actor->GetComponent<TransformComponent>()->GetPosition() + Vec3(1.25f, 0.0f, 0.0f));
+					auto phys = selectedPiece.actor->GetComponent<PhysicsComponent>();
+					if (phys) phys->ApplyForce(Vec3(-30.0f, 0.0f,0.0f));
 				}
 				break;
 			}
@@ -266,8 +264,32 @@ void Scene0g::HandleEvents(const SDL_Event &sdlEvent) {
 				if (it != actors.end()) 
 				{
 					ActorData& selectedPiece = it->second;
-					selectedPiece.actor->GetComponent<TransformComponent>()
-					->setPosition(selectedPiece.actor->GetComponent<TransformComponent>()->GetPosition() + Vec3(-1.25f, 0.0f, 0.0f));
+					auto phys = selectedPiece.actor->GetComponent<PhysicsComponent>();
+					if (phys) phys->ApplyForce(Vec3(30.0f, 0.0f,0.0f));
+				}
+				break;
+			}
+    case SDL_SCANCODE_UP:
+			{
+				auto it = actors.find(selectedActorName);
+
+				if (it != actors.end()) 
+				{
+					ActorData& selectedPiece = it->second;
+					auto phys = selectedPiece.actor->GetComponent<PhysicsComponent>();
+					if (phys) phys->ApplyForce(Vec3(0.0f, 30.0f,0.0f));
+				}
+				break;
+			}
+    case SDL_SCANCODE_DOWN:
+			{
+				auto it = actors.find(selectedActorName);
+
+				if (it != actors.end()) 
+				{
+					ActorData& selectedPiece = it->second;
+					auto phys = selectedPiece.actor->GetComponent<PhysicsComponent>();
+					if (phys) phys->ApplyForce(Vec3(0.0f, -30.0f,0.0f));
 				}
 				break;
 			}
@@ -401,26 +423,16 @@ void Scene0g::RenderGUI()
 	}
 	ImGui::End();
 }
-
-
-
 void Scene0g::PieceMovement(std::string pieceName, SDL_Event& sdlEvent)
 {
-	
 	for (const auto& pair : actors) {
 		const std::string& name = pair.first;
 		Actor* piece = pair.second.actor.get();
-
 		float intensity = (name == selectedActorName) ? 2.5f : 1.0f;
 		glUniform1f(shader->GetUniformID("highlightIntensity"), intensity);
-    	
-		
-		
 	}
 	
 }
-
-
 //					<-PRESET LIGHTING THEMES->					//
 void Scene0g::SetupTheme(std::string themeName)
 {
@@ -500,6 +512,47 @@ void Scene0g::Update(const float deltaTime) {
 		}
 	}
 
+
+	for (auto& pair : actors) {
+		pair.second.actor->Update(deltaTime);
+	}
+	
+	for (auto itA = actors.begin(); itA != actors.end(); ++itA) {
+
+		
+		Actor* actorA = itA->second.actor.get();
+        
+		auto colA = actorA->GetComponent<CollisionComponent>();
+		auto physA = actorA->GetComponent<PhysicsComponent>();
+		auto transA = actorA->GetComponent<TransformComponent>();
+
+		if (!colA || !physA || !transA) continue;
+
+		// Sync the sphere center with the current actor position before checking
+		// We use GetSphere().r to keep the radius we set during OnCreate
+		colA->SetSphere(transA->GetPosition(), colA->GetSphere().r);
+
+		for (auto itB = std::next(itA); itB != actors.end(); ++itB) {
+			Actor* actorB = itB->second.actor.get();
+            
+			auto colB = actorB->GetComponent<CollisionComponent>();
+			auto physB = actorB->GetComponent<PhysicsComponent>();
+			auto transB = actorB->GetComponent<TransformComponent>();
+
+			if (!colB || !physB || !transB) continue;
+
+			// Sync the second sphere's center
+			colB->SetSphere(transB->GetPosition(), colB->GetSphere().r);
+
+			// Now the math is super simple
+			if (collisionSystem->CollisionDetection(colA->GetSphere(), colB->GetSphere())) {
+				collisionSystem->SphereSphereCollisionResponse(
+					colA->GetSphere(), physA, 
+					colB->GetSphere(), physB
+				);
+			}
+		}
+	}
 }
 void Scene0g::Render() const {
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
@@ -561,6 +614,8 @@ void Scene0g::Render() const {
        glUniformMatrix4fv(shader->GetUniformID("modelMatrix"), 1, GL_FALSE, piece->GetModelMatrix());
        glBindTexture(GL_TEXTURE_2D, piece->GetComponent<MaterialComponent>()->getTextureID());
        piece->GetComponent<MeshComponent>()->Render();
+
+    	
     }
 	glUniform1f(shader->GetUniformID("highlightIntensity"), 1.0f);
     glBindTexture(GL_TEXTURE_2D, 0);

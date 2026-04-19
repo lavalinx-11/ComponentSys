@@ -30,7 +30,9 @@ void Actor::OnDestroy() {
 
 
 void Actor::Update(const float deltaTime) {
-	std::cout << "Hello from Update\n";
+	for (auto component : components) {
+		component->Update(deltaTime);
+	}
 }
 
 void Actor::Render()const {}

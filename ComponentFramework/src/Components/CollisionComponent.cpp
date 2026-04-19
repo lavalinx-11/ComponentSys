@@ -8,6 +8,7 @@ CollisionComponent::CollisionComponent(std::weak_ptr<Component> parent_, float r
 Component(parent_), radius(radius_)
 {
     colliderType = ColliderType::SPHERE;
+    sphere.r = radius;
 }
 
 CollisionComponent::CollisionComponent(std::weak_ptr<Component> parent_, Vec3 halfExtents_) :
