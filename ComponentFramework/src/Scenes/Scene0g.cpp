@@ -1,4 +1,5 @@
 #include <glew.h>
+#include <algorithm>
 #include <iostream>
 #include <cstdlib>
 #include <SDL3/SDL.h>
@@ -51,7 +52,7 @@ K = Move Board Backward
 
 
 // Supporting function to convert strings to pieces to prevent an obnoxious render call in render
-PieceType StringToPieceType(const std::string& typeStr) {
+static PieceType StringToPieceType(const std::string& typeStr) {
 	if (typeStr == "Pawn")   return PieceType::PAWN;
 	if (typeStr == "Rook")   return PieceType::ROOK;
 	if (typeStr == "Knight") return PieceType::KNIGHT;
@@ -67,10 +68,10 @@ bool Scene0g::OnCreate() {
 	shader = std::make_shared<ShaderComponent>(std::weak_ptr<Component>(),"shaders/texturePhongVert.glsl","shaders/texturePhongFrag.glsl");
 	shader->OnCreate();
 	window = new Window();
-	camera = std::make_shared<CameraActor>(std::weak_ptr<Actor>(), 45.0f, 16.0f / 9.0f, 0.1f, 100.0f, window->getWindow());
+	camera = std::make_shared<CameraActor>(std::weak_ptr<Actor>(), 45.0f, 16.0f / 9.0f, 0.5f, 5000.0f, window->getWindow());
 	camera->AddComponent<TransformComponent>(std::weak_ptr<Component>(), Vec3(0.0f, 0.0f, -15.0f), Quaternion());
 	camera->OnCreate();
-	camera->setCamMovement(true);
+	camera->SetCamMovement(true);
 	camera->SkyboxSetup(
 			"textures/spacePX.png",	
 			"textures/spacePY.png",
@@ -124,21 +125,27 @@ bool Scene0g::OnCreate() {
 	rookMesh->OnCreate();
 
 	
-	/*						<-SETUP FOR SHARED TEXTURES AND PIECE TYPES->					*/
+	/*						<-SETUP FOR SHARED TEXTURES->					*/
 	Ref<MaterialComponent>blackChessPieces = std::make_shared<MaterialComponent>(std::weak_ptr<Component>(), "textures/BlackChessPiece.png");
 	blackChessPieces->OnCreate();
 	Ref<MaterialComponent>whiteChessPieces = std::make_shared<MaterialComponent>(std::weak_ptr<Component>(), "textures/WhiteChessPiece.png");
 	whiteChessPieces->OnCreate();
-	std::string pieceTypes[] = {
-	"Rook", "Knight", "Bishop", "Queen", "King", "Bishop", "Knight", "Rook"
-	};
 
+	/*						<-SETUP FOR COLLISION HITBOXES->					*/
+	debugSphere = std::make_shared<MeshComponent>(std::weak_ptr<Component>(), "meshes/Sphere.obj");
+	debugSphere->OnCreate();
+
+	debugCube = std::make_shared<MeshComponent>(std::weak_ptr<Component>(), "meshes/Cube.obj");
+	debugCube->OnCreate();
 	
 	// This is a map used to make naming my pieces easier.
 	std::map<std::string, int> pieceCounters;
 	
 	PieceType typeOfActor;
 	for (int i = 0; i < 32; i++) {
+		std::string pieceTypes[] = {
+			"Rook", "Knight", "Bishop", "Queen", "King", "Bishop", "Knight", "Rook"
+		};
 		// Tools to index the Unordered Map to more easily index and find things.
 		int pieceIndex = i % 16;
 		int row = i / 8; 
@@ -159,32 +166,46 @@ bool Scene0g::OnCreate() {
 		//							<-NEW ACTOR GENERATION->								//
 		std::unique_ptr<Actor>actorNew = std::make_unique<Actor>(board);
 		typeOfActor = StringToPieceType(type);
+		Vec3 extents(0.4f, 0.4f, 0.4f); 
+		Vec3 boxOffset(0.0f, 0.4f, 0.0f); 
 		
-		// Based off of which actor it is give them the corresponding mesh.
+		// Based off of which actor it is give them the corresponding mesh and half extents (Also an offset to make the box originate in the center)
 		switch (typeOfActor)
 		{
 		case(PAWN):
+			extents = Vec3(0.40f, 0.40f, 0.50f); 
+			boxOffset = Vec3(0.0f, 0.0f, 0.50f);
 			actorNew->AddComponent<MeshComponent>(pawnMesh);
 			break;
 		case(KING):
+			extents = Vec3(0.40f, 0.40f, 0.90f); 
+			boxOffset = Vec3(0.0f, 0.0f, 0.90f);
 			actorNew->AddComponent<MeshComponent>(kingMesh);
 			break;
 		case(QUEEN):
+			extents = Vec3(0.40f, 0.40f, 0.90f); 
+			boxOffset = Vec3(0.0f, 0.0f, 0.90f);
 			actorNew->AddComponent<MeshComponent>(queenMesh);
 			break;
 		case(BISHOP):
+			extents = Vec3(0.40f, 0.40f, 0.70f);
+			boxOffset = Vec3(0.0f, 0.0f, 0.70f);
 			actorNew->AddComponent<MeshComponent>(bishopMesh);
 			break;
 		case(ROOK):
+			extents = Vec3(0.40f, 0.40f, 0.70f); 
+			boxOffset = Vec3(0.0f, 0.0f, 0.70f);
 			actorNew->AddComponent<MeshComponent>(rookMesh);
 			break;
 		case(KNIGHT):
+			extents = Vec3(0.40f, 0.40f, 0.70f); 
+			boxOffset = Vec3(0.0f, 0.0f, 0.7f);
 			actorNew->AddComponent<MeshComponent>(knightMesh);
 			break;
 		}
 		Vec3 finalPos;
 
-		// Based off of which type of piece it is give it the corresponding texture and update it's position
+		// Based off of which type of piece it is give it the corresponding texture and update its position
 		if (color == "Black")
 		{
 			actorNew->AddComponent<MaterialComponent>(blackChessPieces);
@@ -199,10 +220,11 @@ bool Scene0g::OnCreate() {
 		actorNew->AddComponent<TransformComponent>(std::weak_ptr<Component>(), finalPos, Quaternion(), Vec3(0.125f, 0.125f, 0.125f));
 		Quaternion rot = QMath::angleAxisRotation(90.0f, Vec3(1.0f, 0.0f, 0.0f));
 		actorNew->GetComponent<TransformComponent>()->SetOrientation(actorNew->GetComponent<TransformComponent>()->GetOrientation() *= rot);
-		actorNew->AddComponent<CollisionComponent>(std::weak_ptr<Component>(), 0.32f);
+		//actorNew->AddComponent<CollisionComponent>(std::weak_ptr<Component>(),actorNew->GetComponent<TransformComponent>(), 0.34f); //Sphere Setup
+		actorNew->AddComponent<CollisionComponent>(std::weak_ptr<Component>(),actorNew->GetComponent<TransformComponent>(), extents, boxOffset);
 		actorNew->AddComponent<PhysicsComponent>(std::weak_ptr<Component>(), 1.0f);
 		actorNew->GetComponent<PhysicsComponent>()->SetTransform(actorNew->GetComponent<TransformComponent>());
-
+		
 		
 		// Rotate the white knights as they face the opposite direction by default
 		actorNew->OnCreate();
@@ -245,54 +267,6 @@ void Scene0g::HandleEvents(const SDL_Event &sdlEvent) {
 
 			break;
 		}
-    case SDL_SCANCODE_LEFT:
-			{
-				auto it = actors.find(selectedActorName);
-
-				if (it != actors.end()) 
-				{
-					ActorData& selectedPiece = it->second;
-					auto phys = selectedPiece.actor->GetComponent<PhysicsComponent>();
-					if (phys) phys->ApplyForce(Vec3(-30.0f, 0.0f,0.0f));
-				}
-				break;
-			}
-    case SDL_SCANCODE_RIGHT:
-			{
-				auto it = actors.find(selectedActorName);
-
-				if (it != actors.end()) 
-				{
-					ActorData& selectedPiece = it->second;
-					auto phys = selectedPiece.actor->GetComponent<PhysicsComponent>();
-					if (phys) phys->ApplyForce(Vec3(30.0f, 0.0f,0.0f));
-				}
-				break;
-			}
-    case SDL_SCANCODE_UP:
-			{
-				auto it = actors.find(selectedActorName);
-
-				if (it != actors.end()) 
-				{
-					ActorData& selectedPiece = it->second;
-					auto phys = selectedPiece.actor->GetComponent<PhysicsComponent>();
-					if (phys) phys->ApplyForce(Vec3(0.0f, 30.0f,0.0f));
-				}
-				break;
-			}
-    case SDL_SCANCODE_DOWN:
-			{
-				auto it = actors.find(selectedActorName);
-
-				if (it != actors.end()) 
-				{
-					ActorData& selectedPiece = it->second;
-					auto phys = selectedPiece.actor->GetComponent<PhysicsComponent>();
-					if (phys) phys->ApplyForce(Vec3(0.0f, -30.0f,0.0f));
-				}
-				break;
-			}
 		}
 		break;
 
@@ -355,7 +329,7 @@ void Scene0g::RenderGUI()
 
 	// ImGui window initialization for the piece selector
 	ImGuiViewport* viewport = ImGui::GetMainViewport();
-	float desiredWidth = 200.0f;  
+	float desiredWidth = 400.0f;  
 	float desiredHeight = 500.0f; 
 	float windowPosX = viewport->WorkPos.x + viewport->WorkSize.x - desiredWidth - 10.0f;
 	float windowPosY = viewport->WorkPos.y + 50.0f; // Top padding
@@ -421,20 +395,32 @@ void Scene0g::RenderGUI()
 			canBoardSpin = true;
 		}
 	}
-	ImGui::End();
-}
-void Scene0g::PieceMovement(std::string pieceName, SDL_Event& sdlEvent)
-{
-	for (const auto& pair : actors) {
-		const std::string& name = pair.first;
-		Actor* piece = pair.second.actor.get();
-		float intensity = (name == selectedActorName) ? 2.5f : 1.0f;
-		glUniform1f(shader->GetUniformID("highlightIntensity"), intensity);
+	if (ImGui::Button("Show Hitboxes"))
+	{
+		if (showHitboxes)
+		{
+			showHitboxes = false;
+		}
+		else
+		{
+			showHitboxes = true;
+		}
 	}
 	
+	float cameraSpeed = camera->GetCameraSpeed();
+	float cameraSensitivity = camera->GetSensitivity();
+	if (ImGui::SliderFloat("Cam Speed",&cameraSpeed, 0.1f, 50.0f)) {
+		camera->SetCameraSpeed(cameraSpeed);
+	}
+
+	if (ImGui::SliderFloat("Cam Sensitivity",&cameraSensitivity, 0.1f, 1.0f)) {
+		camera->SetCamSensitivity(cameraSensitivity);
+	}
+	ImGui::End();
 }
+
 //					<-PRESET LIGHTING THEMES->					//
-void Scene0g::SetupTheme(std::string themeName)
+void Scene0g::SetupTheme(const std::string& themeName)
 {
 	isTransitioning = true;
 	transitionAlpha = 0.0f;
@@ -470,6 +456,60 @@ void Scene0g::SetupTheme(std::string themeName)
 		for(int i=1; i<5; i++) targetDiffuse[i] = Vec4(0.1f, 0.02f, 0.0f, 1.0f);
 	}
 }
+
+void Scene0g::SphereCollisions()
+{
+	for (auto itA = actors.begin(); itA != actors.end(); ++itA) {
+		Actor* actorA = itA->second.actor.get();
+        
+		auto collisionsA = actorA->GetComponent<CollisionComponent>();
+		auto physA = actorA->GetComponent<PhysicsComponent>();
+		auto transformA = actorA->GetComponent<TransformComponent>();
+		if (!collisionsA || !physA || !transformA) continue;
+		collisionsA->SetSphere(transformA->GetPosition(), collisionsA->GetSphere().r);
+		
+		for (auto itB = std::next(itA); itB != actors.end(); ++itB) {
+			Actor* actorB = itB->second.actor.get();
+			auto collisionsB = actorB->GetComponent<CollisionComponent>();
+			auto physB = actorB->GetComponent<PhysicsComponent>();
+			auto transformB = actorB->GetComponent<TransformComponent>();
+			if (!collisionsB || !physB || !transformB) continue;
+
+			
+			collisionsB->SetSphere(transformB->GetPosition(), collisionsB->GetSphere().r);
+			if (collisionSystem->CollisionDetection(collisionsA->GetSphere(), collisionsB->GetSphere())) {
+				collisionSystem->SphereSphereCollisionResponse(
+					collisionsA->GetSphere(), physA, 
+					collisionsB->GetSphere(), physB
+				);
+			}
+		}
+	}
+}
+
+void Scene0g::AABBCollisions()
+{
+	for (auto itA = actors.begin(); itA != actors.end(); ++itA) {
+		Actor* actorA = itA->second.actor.get();
+		auto colA = actorA->GetComponent<CollisionComponent>();
+		auto physA = actorA->GetComponent<PhysicsComponent>();
+
+		if (!colA || !physA) continue;
+
+		for (auto itB = std::next(itA); itB != actors.end(); ++itB) {
+			Actor* actorB = itB->second.actor.get();
+			auto colB = actorB->GetComponent<CollisionComponent>();
+			auto physB = actorB->GetComponent<PhysicsComponent>();
+
+			if (!colB || !physB) continue;
+
+			if (collisionSystem->CollisionDetection(colA->GetAABB(), colB->GetAABB())) {
+				collisionSystem->AABBCollisionResponse(colA, physA, colB, physB);
+			}
+		}
+	}
+}
+
 void Scene0g::Update(const float deltaTime) {
 	camera->Update(deltaTime);
 	
@@ -480,10 +520,10 @@ void Scene0g::Update(const float deltaTime) {
 	float z = sin(time * 0.5f) * radius;
 	lights[0]->GetComponent<TransformComponent>()->setPosition(Vec3(x, 10.0f, z));
 
-	// Slow transition for the lights to make it look more cinematic
+	// Slow transition for the lights 
 	if (isTransitioning) {
 		transitionAlpha += deltaTime * transitionSpeed;
-		if (transitionAlpha > 1.0f) transitionAlpha = 1.0f;
+		transitionAlpha = std::min(transitionAlpha, 1.0f);
 
 		for (int i = 0; i < 5; i++) {
 			Vec4 nextDiff = startDiffuse[i] + (targetDiffuse[i] - startDiffuse[i]) * transitionAlpha;
@@ -516,43 +556,32 @@ void Scene0g::Update(const float deltaTime) {
 	for (auto& pair : actors) {
 		pair.second.actor->Update(deltaTime);
 	}
-	
-	for (auto itA = actors.begin(); itA != actors.end(); ++itA) {
 
-		
-		Actor* actorA = itA->second.actor.get();
-        
-		auto colA = actorA->GetComponent<CollisionComponent>();
-		auto physA = actorA->GetComponent<PhysicsComponent>();
-		auto transA = actorA->GetComponent<TransformComponent>();
+	AABBCollisions();
+	//SphereCollisions();
+	if (!selectedActorName.empty()) {
+		auto it = actors.find(selectedActorName);
+		if (it != actors.end()) {
+			auto phys = it->second.actor->GetComponent<PhysicsComponent>();
+			const bool* keys = SDL_GetKeyboardState(nullptr);
+			Vec3 forceDir(0.0f, 0.0f, 0.0f);
 
-		if (!colA || !physA || !transA) continue;
 
-		// Sync the sphere center with the current actor position before checking
-		// We use GetSphere().r to keep the radius we set during OnCreate
-		colA->SetSphere(transA->GetPosition(), colA->GetSphere().r);
-
-		for (auto itB = std::next(itA); itB != actors.end(); ++itB) {
-			Actor* actorB = itB->second.actor.get();
-            
-			auto colB = actorB->GetComponent<CollisionComponent>();
-			auto physB = actorB->GetComponent<PhysicsComponent>();
-			auto transB = actorB->GetComponent<TransformComponent>();
-
-			if (!colB || !physB || !transB) continue;
-
-			// Sync the second sphere's center
-			colB->SetSphere(transB->GetPosition(), colB->GetSphere().r);
-
-			// Now the math is super simple
-			if (collisionSystem->CollisionDetection(colA->GetSphere(), colB->GetSphere())) {
-				collisionSystem->SphereSphereCollisionResponse(
-					colA->GetSphere(), physA, 
-					colB->GetSphere(), physB
-				);
+			if (keys[SDL_SCANCODE_LEFT])  forceDir.x -= 1.0f;
+			if (keys[SDL_SCANCODE_RIGHT]) forceDir.x += 1.0f;
+			if (keys[SDL_SCANCODE_UP])    forceDir.y += 1.0f;
+			if (keys[SDL_SCANCODE_DOWN])  forceDir.y -= 1.0f;
+			if (keys[SDL_SCANCODE_SPACE]) forceDir.z += 1.0f;
+			if (keys[SDL_SCANCODE_LCTRL]) forceDir.z -= 1.0f;
+			
+			if (VMath::mag(forceDir) > 0.001f) {
+				forceDir = VMath::normalize(forceDir);
+				float strength = 40.0f; 
+				if (phys) phys->ApplyForce(forceDir * strength);
 			}
 		}
 	}
+	
 }
 void Scene0g::Render() const {
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
@@ -617,9 +646,40 @@ void Scene0g::Render() const {
 
     	
     }
+
+	if (showHitboxes)
+	{
+		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+		glDisable(GL_CULL_FACE);               
+		glBindTexture(GL_TEXTURE_2D, 0);        
+		Matrix4 currentBoardMatrix = board->GetComponent<TransformComponent>()->GetTransformMatrix();
+
+		for (const auto& pair : actors) {
+			Actor* piece = pair.second.actor.get();
+			auto col = piece->GetComponent<CollisionComponent>();
+			if (!col) continue;
+
+			if (col->GetColliderType() == ColliderType::SPHERE) {
+				Sphere s = col->GetSphere();
+				Matrix4 debugModel = currentBoardMatrix * MMath::translate(s.center) * MMath::scale(s.r, s.r, s.r);
+				glUniformMatrix4fv(shader->GetUniformID("modelMatrix"), 1, GL_FALSE, debugModel);
+				debugSphere->Render();
+			} 
+			else if (col->GetColliderType() == ColliderType::AABB) {
+				AABB box = col->GetAABB();
+				Matrix4 debugModel = currentBoardMatrix * MMath::translate(box.center) * MMath::scale(box.halfExtents.x, box.halfExtents.y, box.halfExtents.z);
+				glUniformMatrix4fv(shader->GetUniformID("modelMatrix"), 1, GL_FALSE, debugModel);
+				debugCube->Render();
+			}
+		}
+	}
+	
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); 
+	glEnable(GL_CULL_FACE);
+	
 	glUniform1f(shader->GetUniformID("highlightIntensity"), 1.0f);
     glBindTexture(GL_TEXTURE_2D, 0);
     glUseProgram(0);
+
+	
 }
-
-

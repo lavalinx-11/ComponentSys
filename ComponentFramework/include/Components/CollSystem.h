@@ -13,7 +13,6 @@ private:
     
     std::vector<Ref<Actor>> collidingActors;
 public:
-    /// This function will check the the actor being added is new and has the all proper components 
     void AddActor(Ref<Actor> actor_) {
         if(actor_->GetComponent<CollisionComponent>().get() == nullptr){
             Debug::Error("The Actor must have a CollisionComponent - ignored ", __FILE__, __LINE__);
@@ -27,10 +26,12 @@ public:
         collidingActors.push_back(actor_);
     }
 
+    static void ApplyImpulse(Ref<PhysicsComponent> pc1, Ref<PhysicsComponent> pc2, Vec3 normal);
     bool CollisionDetection(const Sphere &s1, const Sphere &s2) const; 
     bool CollisionDetection(const AABB &bb1, const AABB &bb2) const; 
     bool CollisionDetection(const Sphere s1, const Plane p1) const;
     void SphereSphereCollisionResponse(Sphere s1, Ref<PhysicsComponent> pc1, Sphere s2, Ref<PhysicsComponent> pc2);
+    void AABBCollisionResponse(Ref<CollisionComponent> col1, Ref<PhysicsComponent> pc1, Ref<CollisionComponent> col2, Ref<PhysicsComponent> pc2);
     void Update(const float deltaTime);
 	
 };

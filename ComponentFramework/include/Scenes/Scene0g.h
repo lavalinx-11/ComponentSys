@@ -11,6 +11,8 @@
 #include "Components/ShaderComponent.h"
 #include "Components/MeshComponent.h"
 #include "Components/CollSystem.h"
+
+
 /// Forward declarations 
 union SDL_Event;
 
@@ -33,35 +35,44 @@ struct ActorData
 
 class Scene0g : public Scene {
 private:
+	// Shared Pointers
 	Ref<ShaderComponent> shader;
 	Ref<Actor> board;
 	Ref<CameraActor> camera;
+	Ref<MeshComponent> debugSphere;
+	Ref<MeshComponent> debugCube;
+
+	
 	std::unordered_map<std::string, ActorData> actors; 
 	std::string actorName; 
 	std::string actorColour;
 	std::string actorType;
-	std::string selectedActorName = "";
+	std::string selectedActorName;
 	std::vector<std::unique_ptr<Actor>> knightPieces;
 	std::unique_ptr<LightActor> lights[5];
-	bool canBoardSpin = false;
 	std::unique_ptr<CollisionSystem> collisionSystem;
+
+	// Default Variables
+	bool showHitboxes = true;
+	bool canBoardSpin = false;
 	bool isTransitioning = false;
+	bool drawInWireMode;
 	float transitionAlpha = 0.0f; // 0.0 to 1.0
 	float transitionSpeed = 0.5f; // 1.0 = 1 second, 0.5 = 2 seconds
+
+	// Vectors 
 	Vec4 startDiffuse[5], startSpecular[5], startAmbient[5];
 	Vec3 startPos[5];
 	Vec4 targetDiffuse[5], targetSpecular[5], targetAmbient[5];
 	Vec3 targetPos[5];
+
 	
-	bool drawInWireMode;
-	bool showImGuiDemoWindow = true; // optional for testing
-	char textBuffer[256] = "";       // input text buffer
-	int buttonClicks = 0;            // button counter
+	// SDL Stuff
 	Window* window;
 	SDL_GLContext context;
 public:
 	explicit Scene0g();
-	virtual ~Scene0g();
+	~Scene0g() override;
 
 	virtual bool OnCreate() override;
 	virtual void OnDestroy() override;
@@ -69,8 +80,9 @@ public:
 	virtual void Render() const override;
 	virtual void HandleEvents(const SDL_Event &sdlEvent) override;
 	virtual void RenderGUI() override;
-	void PieceMovement(std::string pieceName, SDL_Event &sdlEvent);
-	void SetupTheme(std::string themeName);
+	void SetupTheme(const std::string& themeName);
+	void SphereCollisions();
+	void AABBCollisions();
 	
 };
 

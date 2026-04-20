@@ -22,18 +22,14 @@ PhysicsComponent::~PhysicsComponent()
 bool PhysicsComponent::OnCreate()
 {
     std::shared_ptr<Component> parentPtr = parent.lock(); 
-
     if (parentPtr) {
-        // 2. Cast the parent to an Actor so we can look for other components
         std::shared_ptr<Actor> actor = std::dynamic_pointer_cast<Actor>(parentPtr);
         
         if (actor) {
-            // 3. Cache the transform so we don't have to look it up in Update()
             transform = actor->GetComponent<TransformComponent>();
         }
     }
 
-    // Return true if we successfully found our transform
     return transform != nullptr;
 }
 

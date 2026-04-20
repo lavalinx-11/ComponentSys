@@ -1,3 +1,4 @@
+#include <algorithm>
 #include "Actors/CameraActor.h"
 #include "Components/TransformComponent.h"
 #include "imgui.h"
@@ -65,8 +66,8 @@ void CameraActor::HandleEvents(const SDL_Event& event)
 		yaw -= dx * sensitivity;
 		pitchAngle -= dy * sensitivity;
 		// Clamp the pitch angle to avoid looking too far up or down 
-		if (pitchAngle > 89.0f) pitchAngle = 89.0f;
-		if (pitchAngle < -89.0f) pitchAngle = -89.0f;
+		pitchAngle = std::min(pitchAngle, 89.0f);
+		pitchAngle = std::max(pitchAngle, -89.0f);
 		/// Create the orientation quaternion from yaw and pitch
 		Quaternion yawQ = QMath::angleAxisRotation(yaw, Vec3(0.0f, 1.0f, 0.0f));
 		Quaternion pitchQ = QMath::angleAxisRotation(pitchAngle, Vec3(1.0f, 0.0f, 0.0f));
@@ -77,7 +78,7 @@ void CameraActor::HandleEvents(const SDL_Event& event)
 }
 
 
-CameraActor::~CameraActor() {}
+CameraActor::~CameraActor() = default;
 
 bool CameraActor::OnCreate() {
 	Ref<TransformComponent> tc = GetComponent<TransformComponent>();
@@ -93,12 +94,9 @@ bool CameraActor::OnCreate() {
 
 	
 	void CameraActor::UpdateViewMatrix() {
-		// A view matrix is the inverse of the camera's world transform
 		Matrix4 rotation = MMath::toMatrix4(orientation);
 		Matrix4 translation = MMath::translate(position);
-
-		// View = Inverse(Model)
-		viewMatrix = MMath::inverse(translation * rotation);
+	viewMatrix = MMath::inverse(translation * rotation);
 	}
 
 
@@ -107,25 +105,17 @@ bool CameraActor::OnCreate() {
 		if (!canCamMove) return;
 
 		const bool* keys = SDL_GetKeyboardState(nullptr);
-		float moveSpeed = 9.0f * deltaTime;
-
-		// 1. Create a direction vector to accumulate movement
+		float moveSpeed = camSpeed * deltaTime;
 		Vec3 moveDir(0.0f, 0.0f, 0.0f);
 
-		// 2. Accumulate all inputs into the direction vector
 		if (keys[SDL_SCANCODE_W]) moveDir += GetCameraForward();
 		if (keys[SDL_SCANCODE_S]) moveDir -= GetCameraForward();
 		if (keys[SDL_SCANCODE_A]) moveDir -= GetCameraRight();
 		if (keys[SDL_SCANCODE_D]) moveDir += GetCameraRight();
-
-		// Vertical movement is usually independent of looking direction, 
-		// but you can include it in normalization if you want "3D flight" 
-		// to be consistent speed-wise.
+	
 		if (keys[SDL_SCANCODE_E]) moveDir += Vec3(0.0f, 1.0f, 0.0f);
 		if (keys[SDL_SCANCODE_Q]) moveDir -= Vec3(0.0f, 1.0f, 0.0f);
-
-		// 3. Normalize and Apply
-		// We check magnitude to avoid division by zero if no keys are pressed
+	
 		if (VMath::mag(moveDir) > 0.001f) {
 			moveDir = VMath::normalize(moveDir);
 			SetPosition(GetPosition() + moveDir * moveSpeed);

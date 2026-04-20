@@ -3,6 +3,32 @@
 
 using namespace  MATH;
 
+
+
+void CollisionSystem::ApplyImpulse(Ref<PhysicsComponent> pc1, Ref<PhysicsComponent> pc2, Vec3 normal)
+{
+
+    float e = 1.0f; // Elasticity / Bounciness
+    Vec3 v1 = pc1->GetVelocity(); // Initial Velocity
+    Vec3 v2 = pc2->GetVelocity();
+    float m1 = pc1->GetMass();
+    float m2 = pc2->GetMass();
+
+    // Get dot prod to find direction of velocity
+    float v1p = VMath::dot(v1, normal);
+    float v2p = VMath::dot(v2, normal);
+
+    // if they're moving apart do nothing
+    if(v1p - v2p > 0.0f) return;
+
+    // Final Velocity Direction
+    float v1p_new = (((m1 - e * m2) * v1p) + ((1.0f + e) * m2 * v2p)) / (m1 + m2);
+    float v2p_new = (((m2 - e * m1) * v2p) + ((1.0f + e) * m1 * v1p)) / (m1 + m2);
+
+    pc1->SetVelocity(v1 + (v1p_new - v1p) * normal);
+    pc2->SetVelocity(v2 + (v2p_new - v2p) * normal);
+}
+
 bool CollisionSystem::CollisionDetection(const Sphere& s1, const Sphere& s2) const
 {
     float distanceX = s1.center.x - s2.center.x;
@@ -16,10 +42,14 @@ bool CollisionSystem::CollisionDetection(const Sphere& s1, const Sphere& s2) con
     
 }
 
-/*bool CollisionSystem::CollisionDetection(const AABB& bb1, const AABB& bb2) const
+bool CollisionSystem::CollisionDetection(const AABB& bb1, const AABB& bb2) const
 {
-    
-}*/
+    if (std::abs(bb1.center.x - bb2.center.x) > (bb1.halfExtents.x + bb2.halfExtents.x)) return false;
+    if (std::abs(bb1.center.y - bb2.center.y) > (bb1.halfExtents.y + bb2.halfExtents.y)) return false;
+    if (std::abs(bb1.center.z - bb2.center.z) > (bb1.halfExtents.z + bb2.halfExtents.z)) return false;
+
+    return true;
+}
 
 /*bool CollisionSystem::CollisionDetection(const Sphere s1, const Plane p1) const
 {
@@ -27,26 +57,42 @@ bool CollisionSystem::CollisionDetection(const Sphere& s1, const Sphere& s2) con
 }*/
 
 
-void CollisionSystem::SphereSphereCollisionResponse(Sphere s1, Ref<PhysicsComponent> pc1, Sphere s2, Ref<PhysicsComponent> pc2) {
-    float e = 1.0f; /// coefficient of restitution
+void CollisionSystem::SphereSphereCollisionResponse(Sphere s1, Ref<PhysicsComponent> pc1, Sphere s2, Ref<PhysicsComponent> pc2)
+{
     Vec3 L = s1.center - s2.center;
     Vec3 n = VMath::normalize(L);
-    Vec3 v1 = pc1->GetVelocity();
-    Vec3 v2 = pc2->GetVelocity();
-    float m1 = pc1->GetMass();
-    float m2 = pc2->GetMass();
 
-    float v1p = VMath::dot(v1, n);
-    float v2p = VMath::dot(v2, n);
+   ApplyImpulse(pc1, pc2, n);
+}
 
-    /*if(v1p - v2p > 0.0f) { 
-        return;
+
+void CollisionSystem::AABBCollisionResponse(Ref<CollisionComponent> col1, Ref<PhysicsComponent> pc1, Ref<CollisionComponent> col2, Ref<PhysicsComponent> pc2)
+{
+
+    AABB a = col1->GetAABB();
+    AABB b = col2->GetAABB();
+    Vec3 distance = a.center - b.center;
+    float xOverlap = (a.halfExtents.x + b.halfExtents.x) - std::abs(distance.x);
+    float yOverlap = (a.halfExtents.y + b.halfExtents.y) - std::abs(distance.y);
+
+
+    Vec3 normal;
+    if (xOverlap < yOverlap) {
+        normal = Vec3(distance.x > 0 ? 1.0f : -1.0f, 0.0f, 0.0f);
+    } else {
+        normal = Vec3(0.0f, distance.y > 0 ? 1.0f : -1.0f, 0.0f);
+    }
+    
+    /*float penetration = std::min(xOverlap, yOverlap);
+    const float percent = 1.0f; 
+    const float slop = 0.01f;   
+    if (penetration > slop) {
+        Vec3 correction = ((penetration - slop) / (1.0f/pc1->GetMass() + 1.0f/pc2->GetMass())) * percent * normal;
+        col1->transform->setPosition(col1->transform->GetPosition() + (correction / pc1->GetMass()));
+        col2->transform->setPosition(col2->transform->GetPosition() - (correction / pc2->GetMass()));
     }*/
-    float v1p_new = (((m1 - e * m2) * v1p) + ((1.0f + e) * m2 * v2p)) / (m1 + m2);
-    float v2p_new = (((m2 - e * m1) * v2p) + ((1.0f + e) * m1 * v1p)) / (m1 + m2);
-
-    pc1->GetVelocity() = v1 + (v1p_new - v1p) * n;
-    pc2->GetVelocity() = v2 + (v2p_new - v2p) * n;
+    
+    ApplyImpulse(pc1,pc2, normal);
 }
 
 void CollisionSystem::Update(const float deltaTime)
