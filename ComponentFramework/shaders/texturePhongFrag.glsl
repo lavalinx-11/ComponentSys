@@ -13,6 +13,7 @@ uniform vec4 Specular[5];
 uniform vec4 Diffuse[5]; 
 uniform vec4 Ambient[5]; 
 uniform float highlightIntensity;
+uniform vec4 debugColor; 
 
 uniform sampler2D myTexture; 
 
@@ -30,6 +31,12 @@ void main() {
         totalLight += Ambient[i]  + (diff * Diffuse[i]) + (spec * Specular[i]);
     }
 
-vec4 finalLight = clamp(totalLight, 0.0, 1.0) * kt;
-    fragColor = finalLight * highlightIntensity;
+    
+    if (debugColor.a > 0.0) {
+        fragColor = debugColor * highlightIntensity;
+    } 
+    else {
+        vec4 finalLight = clamp(totalLight, 0.0, 1.0) * kt;
+        fragColor = finalLight * highlightIntensity;
+    }
 }

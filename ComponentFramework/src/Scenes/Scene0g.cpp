@@ -599,10 +599,10 @@ void Scene0g::Render() const {
 
 
 	/*							<-LIGHTS SETUP->								*/
-	float allPos[15];     // 5 lights * 3 floats (vec3)
-	float allDiff[20];    // 5 lights * 4 floats (vec4)
-	float allSpec[20];    // 5 lights * 4 floats (vec4)
-	float allAmb[20];     // 5 lights * 4 floats (vec4)
+	float allPos[15];     // 5 lights * 3 floats 
+	float allDiff[20];    // 5 lights * 4 floats 
+	float allSpec[20];    // 5 lights * 4 floats 
+	float allAmb[20];     // 5 lights * 4 floats 
 
 	for (int i = 0; i < 5; i++) {
 		Vec3 worldPos = lights[i]->GetComponent<TransformComponent>()->GetPosition();
@@ -655,10 +655,22 @@ void Scene0g::Render() const {
 		Matrix4 currentBoardMatrix = board->GetComponent<TransformComponent>()->GetTransformMatrix();
 
 		for (const auto& pair : actors) {
+			const std::string& name = pair.first;
 			Actor* piece = pair.second.actor.get();
 			auto col = piece->GetComponent<CollisionComponent>();
 			if (!col) continue;
 
+			
+			
+		
+       
+			
+			if (name == selectedActorName) {
+				glUniform4f(shader->GetUniformID("debugColor"), 1.0f, 0.41f, 0.70f, 1.0f); 
+			} else {
+				glUniform4f(shader->GetUniformID("debugColor"), 0.5f, 0.0f, 0.8f, 1.0f); 
+			}
+			
 			if (col->GetColliderType() == ColliderType::SPHERE) {
 				Sphere s = col->GetSphere();
 				Matrix4 debugModel = currentBoardMatrix * MMath::translate(s.center) * MMath::scale(s.r, s.r, s.r);
@@ -672,6 +684,8 @@ void Scene0g::Render() const {
 				debugCube->Render();
 			}
 		}
+			glUniform1f(shader->GetUniformID("highlightIntensity"), 1.0f);
+		glUniform4f(shader->GetUniformID("debugColor"), 0.0f, 0.0f, 0.0f, 0.0f);		
 	}
 	
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); 
