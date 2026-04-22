@@ -36,7 +36,7 @@ void CameraActor::HandleEvents(const SDL_Event& event)
 	}
 
 	// Handle Mouse Events for Camera Rotation. Checks if the left mouse button is held down
-	if (!m1Override) {
+	if (!m1Override) {	
 		if (event.type == SDL_EVENT_MOUSE_BUTTON_DOWN &&
 			event.button.button == SDL_BUTTON_LEFT) {
 			mouseHeld = true;

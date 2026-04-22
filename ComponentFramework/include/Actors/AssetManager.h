@@ -7,12 +7,11 @@
 
 class AssetManager {
 private:
-    std::unordered_map<const char* , Ref<Component> > componentCatalog;
-
+	std::unordered_map<std::string, Ref<Component>> componentCatalog;
 public:
     AssetManager();
     ~AssetManager();
-    bool OnCreate();
+    bool OnCreate(const char* xmlFilePath);
 
     void RemoveAllComponents();
     void ListAllComponents() const;

@@ -1561,6 +1561,7 @@
     <None Include="shaders\texturePhongVert.glsl" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="include\Engine\Assets.xml" />
     <Content Include="shaders\skyboxFrag.glsl" />
     <Content Include="shaders\skyboxVert.glsl" />
   </ItemGroup>

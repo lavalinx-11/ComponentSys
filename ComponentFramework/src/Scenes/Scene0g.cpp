@@ -13,6 +13,7 @@
 #include "Components/ShaderComponent.h"
 #include "Components/TransformComponent.h"
 #include <map>
+#include <direct.h>
 ///ImGui includes
 #include "Engine/UIManager.h"
 
@@ -64,10 +65,15 @@ static PieceType StringToPieceType(const std::string& typeStr) {
 
 bool Scene0g::OnCreate() {
 	/*						<-ASSET MANAGER->										*/
+	char buffer[256];
+	_getcwd(buffer, 256);
+	std::cout << "My working directory is: " << buffer << std::endl;
 	assetManager = std::make_unique<AssetManager>();
-	assetManager->OnCreate();
-
-	
+	if (!assetManager->OnCreate("Include/Engine/Assets.xml")) { 
+		Debug::Error("CRITICAL: Asset Manager failed to start. Aborting scene creation.", __FILE__, __LINE__);
+		return false; 
+	}
+	assetManager->ListAllComponents();
 	/*						<-SHADER AND CAMERA SETUP->										*/
 	shader = assetManager->GetComponent<ShaderComponent>("PhongShader");
 	shader->OnCreate();

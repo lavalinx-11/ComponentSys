@@ -1,0 +1,24 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Assets>
+    <Shaders>
+        <Shader name="PhongShader" vert="shaders/texturePhongVert.glsl" frag="shaders/texturePhongFrag.glsl"/>
+    </Shaders>
+
+    <Meshes>
+        <Mesh name="PlaneMesh" file="meshes/Plane.obj"/>
+        <Mesh name="PawnMesh" file="meshes/Pawn.obj"/>
+        <Mesh name="KingMesh" file="meshes/King.obj"/>
+        <Mesh name="QueenMesh" file="meshes/Queen.obj"/>
+        <Mesh name="BishopMesh" file="meshes/Bishop.obj"/>
+        <Mesh name="RookMesh" file="meshes/Rook.obj"/>
+        <Mesh name="KnightMesh" file="meshes/Knight.obj"/>
+        <Mesh name="CubeMesh" file="meshes/Cube.obj"/>
+        <Mesh name="SphereMesh" file="meshes/Sphere.obj"/>
+    </Meshes>
+
+    <Materials>
+        <Material name="BoardMaterial" file="textures/8x8_board_red.png"/>
+        <Material name="BlackMaterial" file="textures/BlackChessPiece.png"/>
+        <Material name="WhiteMaterial" file="textures/WhiteChessPiece.png"/>
+    </Materials>
+</Assets>

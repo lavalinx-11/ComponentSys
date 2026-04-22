@@ -2,8 +2,9 @@
 #include "Components/MeshComponent.h"
 #include "Components/MaterialComponent.h"
 #include "Components/ShaderComponent.h"
+#include "Engine/tinyxml2.h"
 
-
+using namespace tinyxml2;
 AssetManager::AssetManager()
 {
     
@@ -14,28 +15,67 @@ AssetManager::~AssetManager()
     //RemoveAllComponents();
 }
 
-bool AssetManager::OnCreate()
+bool AssetManager::OnCreate(const char* xmlFilePath)
 {
-    AddComponent<ShaderComponent>("PhongShader", std::weak_ptr<Component>(), "shaders/texturePhongVert.glsl", "shaders/texturePhongFrag.glsl");
+    XMLDocument doc;
+    XMLError err = doc.LoadFile(xmlFilePath);
+    
+    if (err != XML_SUCCESS) {
+        // This will print "ErrorName: XML_ERROR_FILE_NOT_FOUND" 
+        // or a syntax error if your XML has a typo!
+        std::string errorMsg = "AssetManager failed to load XML file: ";
+        errorMsg += xmlFilePath;
+        errorMsg += " | Reason: ";
+        errorMsg += doc.ErrorName(); 
+        
+        Debug::Error(errorMsg, __FILE__, __LINE__);
+        return false;
+    }
 
-  
-    AddComponent<MeshComponent>("PlaneMesh",  std::weak_ptr<Component>(), "meshes/Plane.obj");
-    AddComponent<MeshComponent>("PawnMesh",   std::weak_ptr<Component>(), "meshes/Pawn.obj");
-    AddComponent<MeshComponent>("KingMesh",   std::weak_ptr<Component>(), "meshes/King.obj");
-    AddComponent<MeshComponent>("QueenMesh",  std::weak_ptr<Component>(), "meshes/Queen.obj");
-    AddComponent<MeshComponent>("BishopMesh", std::weak_ptr<Component>(), "meshes/Bishop.obj");
-    AddComponent<MeshComponent>("KnightMesh", std::weak_ptr<Component>(), "meshes/Knight.obj");
-    AddComponent<MeshComponent>("RookMesh",   std::weak_ptr<Component>(), "meshes/Rook.obj");
+    XMLElement* root = doc.FirstChildElement("Assets");
+    if (!root) {
+        Debug::Error("XML is missing <Assets> root node!", __FILE__, __LINE__);
+        return false;
+    }
+    
+    XMLElement* shadersNode = root->FirstChildElement("Shaders");
+    if (shadersNode) {
+        for (XMLElement* e = shadersNode->FirstChildElement("Shader"); e != nullptr; e = e->NextSiblingElement("Shader")) {
+            const char* name = e->Attribute("name");
+            const char* vert = e->Attribute("vert");
+            const char* frag = e->Attribute("frag");
+            
+            if (name && vert && frag) {
+                AddComponent<ShaderComponent>(name, std::weak_ptr<Component>(), vert, frag);
+            }
+        }
+    }
+
+    XMLElement* meshesNode = root->FirstChildElement("Meshes");
+    if (meshesNode) {
+        for (XMLElement* e = meshesNode->FirstChildElement("Mesh"); e != nullptr; e = e->NextSiblingElement("Mesh")) {
+            const char* name = e->Attribute("name");
+            const char* file = e->Attribute("file");
+            
+            if (name && file) {
+                AddComponent<MeshComponent>(name, std::weak_ptr<Component>(), file);
+            }
+        }
+    }
+    
+    XMLElement* materialsNode = root->FirstChildElement("Materials");
+    if (materialsNode) {
+        for (XMLElement* e = materialsNode->FirstChildElement("Material"); e != nullptr; e = e->NextSiblingElement("Material")) {
+            const char* name = e->Attribute("name");
+            const char* file = e->Attribute("file");
+            
+            if (name && file) {
+                AddComponent<MaterialComponent>(name, std::weak_ptr<Component>(), file);
+            }
+        }
+    }
 
     
-    AddComponent<MeshComponent>("SphereMesh", std::weak_ptr<Component>(), "meshes/Sphere.obj");
-    AddComponent<MeshComponent>("CubeMesh",   std::weak_ptr<Component>(), "meshes/Cube.obj");
-
-    AddComponent<MaterialComponent>("BoardMaterial", std::weak_ptr<Component>(), "textures/8x8_board_red.png");
-    AddComponent<MaterialComponent>("BlackMaterial", std::weak_ptr<Component>(), "textures/BlackChessPiece.png");
-    AddComponent<MaterialComponent>("WhiteMaterial", std::weak_ptr<Component>(), "textures/WhiteChessPiece.png");
-
-
     for (auto& pair : componentCatalog) {
         pair.second->OnCreate();
     }
