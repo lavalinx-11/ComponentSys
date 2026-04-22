@@ -11,7 +11,7 @@
 #include "Components/ShaderComponent.h"
 #include "Components/MeshComponent.h"
 #include "Components/CollSystem.h"
-
+#include "Actors/AssetManager.h"
 
 /// Forward declarations 
 union SDL_Event;
@@ -51,7 +51,9 @@ private:
 	std::vector<std::unique_ptr<Actor>> knightPieces;
 	std::unique_ptr<LightActor> lights[5];
 	std::unique_ptr<CollisionSystem> collisionSystem;
+	std::unique_ptr<AssetManager> assetManager;
 
+	
 	// Default Variables
 	bool showHitboxes = true;
 	bool canBoardSpin = false;

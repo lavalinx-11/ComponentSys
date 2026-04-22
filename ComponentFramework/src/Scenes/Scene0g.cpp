@@ -63,10 +63,15 @@ static PieceType StringToPieceType(const std::string& typeStr) {
 }
 
 bool Scene0g::OnCreate() {
+	/*						<-ASSET MANAGER->										*/
+	assetManager = std::make_unique<AssetManager>();
+	assetManager->OnCreate();
 
+	
 	/*						<-SHADER AND CAMERA SETUP->										*/
-	shader = std::make_shared<ShaderComponent>(std::weak_ptr<Component>(),"shaders/texturePhongVert.glsl","shaders/texturePhongFrag.glsl");
+	shader = assetManager->GetComponent<ShaderComponent>("PhongShader");
 	shader->OnCreate();
+	
 	window = new Window();
 	camera = std::make_shared<CameraActor>(std::weak_ptr<Actor>(), 45.0f, 16.0f / 9.0f, 0.5f, 5000.0f, window->getWindow());
 	camera->AddComponent<TransformComponent>(std::weak_ptr<Component>(), Vec3(0.0f, 0.0f, -15.0f), Quaternion());
@@ -100,42 +105,22 @@ bool Scene0g::OnCreate() {
 		lights[i]->OnCreate();
 		lights[i]->AddComponent<TransformComponent>(std::weak_ptr<Component>(), Vec3(i * 2.0f, 5.0f, 0.0f), Quaternion());
 	}
-
+	SetupTheme("Midnight");
 	
 	/*						<-BOARD ACTOR SETUP->										*/
 	board = std::make_shared<Actor>(std::weak_ptr<Component>());
-	board->AddComponent<MaterialComponent>(std::weak_ptr<Component>(), "textures/8x8_board_red.png");
+	board->AddComponent<MaterialComponent>(assetManager->GetComponent<MaterialComponent>("BoardMaterial"));
 	board->AddComponent<MeshComponent>(std::weak_ptr<Component>(), "meshes/Plane.obj");
 	board->AddComponent<TransformComponent>(std::weak_ptr<Component>(), Vec3(0.0f, 0.0f, 0.0f), QMath::angleAxisRotation(-90.0f, Vec3(1.0f, 0.0f, 0.0f)));
 	board->GetComponent<TransformComponent>()->SetScale(Vec3(5.0f, 5.0f, 5.0f));
 	board->OnCreate();
 
-	/*						<-SETUP FOR SHARED MESHES->										*/
-	Ref<MeshComponent> pawnMesh = std::make_shared<MeshComponent>(std::weak_ptr<Component>(),"meshes/Pawn.obj");
-	pawnMesh->OnCreate();
-	Ref<MeshComponent> queenMesh = std::make_shared<MeshComponent>(std::weak_ptr<Component>(),"meshes/Queen.obj");
-	queenMesh->OnCreate();
-	Ref<MeshComponent> kingMesh = std::make_shared<MeshComponent>(std::weak_ptr<Component>(),"meshes/King.obj");
-	kingMesh->OnCreate();
-	Ref<MeshComponent> bishopMesh = std::make_shared<MeshComponent>(std::weak_ptr<Component>(),"meshes/Bishop.obj");
-	bishopMesh->OnCreate();
-	Ref<MeshComponent> knightMesh = std::make_shared<MeshComponent>(std::weak_ptr<Component>(),"meshes/Knight.obj");
-	knightMesh->OnCreate();
-	Ref<MeshComponent> rookMesh = std::make_shared<MeshComponent>(std::weak_ptr<Component>(),"meshes/Rook.obj");
-	rookMesh->OnCreate();
-
 	
-	/*						<-SETUP FOR SHARED TEXTURES->					*/
-	Ref<MaterialComponent>blackChessPieces = std::make_shared<MaterialComponent>(std::weak_ptr<Component>(), "textures/BlackChessPiece.png");
-	blackChessPieces->OnCreate();
-	Ref<MaterialComponent>whiteChessPieces = std::make_shared<MaterialComponent>(std::weak_ptr<Component>(), "textures/WhiteChessPiece.png");
-	whiteChessPieces->OnCreate();
-
 	/*						<-SETUP FOR COLLISION HITBOXES->					*/
-	debugSphere = std::make_shared<MeshComponent>(std::weak_ptr<Component>(), "meshes/Sphere.obj");
+	debugSphere = assetManager->GetComponent<MeshComponent>("SphereMesh");
 	debugSphere->OnCreate();
 
-	debugCube = std::make_shared<MeshComponent>(std::weak_ptr<Component>(), "meshes/Cube.obj");
+	debugCube = assetManager->GetComponent<MeshComponent>("CubeMesh");
 	debugCube->OnCreate();
 	
 	// This is a map used to make naming my pieces easier.
@@ -166,41 +151,28 @@ bool Scene0g::OnCreate() {
 		//							<-NEW ACTOR GENERATION->								//
 		std::unique_ptr<Actor>actorNew = std::make_unique<Actor>(board);
 		typeOfActor = StringToPieceType(type);
-		Vec3 extents(0.4f, 0.4f, 0.4f); 
-		Vec3 boxOffset(0.0f, 0.4f, 0.0f); 
 		
-		// Based off of which actor it is give them the corresponding mesh and half extents (Also an offset to make the box originate in the center)
+		
 		switch (typeOfActor)
 		{
 		case(PAWN):
-			extents = Vec3(0.40f, 0.40f, 0.50f); 
-			boxOffset = Vec3(0.0f, 0.0f, 0.50f);
-			actorNew->AddComponent<MeshComponent>(pawnMesh);
+			actorNew->AddComponent<MeshComponent>(assetManager->GetComponent<MeshComponent>("PawnMesh"));
 			break;
 		case(KING):
-			extents = Vec3(0.40f, 0.40f, 0.90f); 
-			boxOffset = Vec3(0.0f, 0.0f, 0.90f);
-			actorNew->AddComponent<MeshComponent>(kingMesh);
+			
+			actorNew->AddComponent<MeshComponent>(assetManager->GetComponent<MeshComponent>("KingMesh"));
 			break;
 		case(QUEEN):
-			extents = Vec3(0.40f, 0.40f, 0.90f); 
-			boxOffset = Vec3(0.0f, 0.0f, 0.90f);
-			actorNew->AddComponent<MeshComponent>(queenMesh);
+			actorNew->AddComponent<MeshComponent>(assetManager->GetComponent<MeshComponent>("QueenMesh"));
 			break;
 		case(BISHOP):
-			extents = Vec3(0.40f, 0.40f, 0.70f);
-			boxOffset = Vec3(0.0f, 0.0f, 0.70f);
-			actorNew->AddComponent<MeshComponent>(bishopMesh);
+			actorNew->AddComponent<MeshComponent>(assetManager->GetComponent<MeshComponent>("BishopMesh"));
 			break;
 		case(ROOK):
-			extents = Vec3(0.40f, 0.40f, 0.70f); 
-			boxOffset = Vec3(0.0f, 0.0f, 0.70f);
-			actorNew->AddComponent<MeshComponent>(rookMesh);
+			actorNew->AddComponent<MeshComponent>(assetManager->GetComponent<MeshComponent>("RookMesh"));
 			break;
 		case(KNIGHT):
-			extents = Vec3(0.40f, 0.40f, 0.70f); 
-			boxOffset = Vec3(0.0f, 0.0f, 0.7f);
-			actorNew->AddComponent<MeshComponent>(knightMesh);
+			actorNew->AddComponent<MeshComponent>(assetManager->GetComponent<MeshComponent>("KnightMesh"));
 			break;
 		}
 		Vec3 finalPos;
@@ -208,20 +180,20 @@ bool Scene0g::OnCreate() {
 		// Based off of which type of piece it is give it the corresponding texture and update its position
 		if (color == "Black")
 		{
-			actorNew->AddComponent<MaterialComponent>(blackChessPieces);
-			finalPos = Vec3(-4.4f + (actorOffset * col), 4.4f - (actorOffset * row), 0.0f);
+			actorNew->AddComponent<MaterialComponent>(assetManager->GetComponent<MaterialComponent>("BlackMaterial"));
+			finalPos = Vec3(-4.4f + (actorOffset * col), 4.4f - (actorOffset * row), 0.005f);
 		}
 		
 		if (color == "White")
 		{
-			actorNew->AddComponent<MaterialComponent>(whiteChessPieces);
-			finalPos = Vec3(-4.4f + (actorOffset * col), -6.85f + (actorOffset * row), 0.0f);
+			actorNew->AddComponent<MaterialComponent>(assetManager->GetComponent<MaterialComponent>("WhiteMaterial"));
+			finalPos = Vec3(-4.4f + (actorOffset * col), -6.85f + (actorOffset * row), 0.005f);
 		}
 		actorNew->AddComponent<TransformComponent>(std::weak_ptr<Component>(), finalPos, Quaternion(), Vec3(0.125f, 0.125f, 0.125f));
 		Quaternion rot = QMath::angleAxisRotation(90.0f, Vec3(1.0f, 0.0f, 0.0f));
 		actorNew->GetComponent<TransformComponent>()->SetOrientation(actorNew->GetComponent<TransformComponent>()->GetOrientation() *= rot);
 		//actorNew->AddComponent<CollisionComponent>(std::weak_ptr<Component>(),actorNew->GetComponent<TransformComponent>(), 0.34f); //Sphere Setup
-		actorNew->AddComponent<CollisionComponent>(std::weak_ptr<Component>(),actorNew->GetComponent<TransformComponent>(), extents, boxOffset);
+		actorNew->AddComponent<CollisionComponent>(std::weak_ptr<Component>(),actorNew->GetComponent<TransformComponent>(),actorNew->GetComponent<MeshComponent>());
 		actorNew->AddComponent<PhysicsComponent>(std::weak_ptr<Component>(), 1.0f);
 		actorNew->GetComponent<PhysicsComponent>()->SetTransform(actorNew->GetComponent<TransformComponent>());
 		
@@ -240,11 +212,14 @@ bool Scene0g::OnCreate() {
 
 void Scene0g::OnDestroy() {
 	actors.clear();
+	assetManager.reset();
 	shader->OnDestroy();
 	board->OnDestroy();
 	camera->OnDestroy();
 	window->OnDestroy();
 	collisionSystem.reset();
+	debugCube.reset();
+	debugSphere.reset();
 	delete window;
 }
 
@@ -283,9 +258,9 @@ void Scene0g::HandleEvents(const SDL_Event &sdlEvent) {
 		break;
     }
 }
+
 void Scene0g::RenderGUI()
 {
-
 	//Setup for lighting config window
 	ImGui::SetNextWindowPos(ImVec2(10, 10), ImGuiCond_Always);
 	ImGui::SetNextWindowSize(ImVec2(260, 450), ImGuiCond_Always);
@@ -431,15 +406,14 @@ void Scene0g::SetupTheme(const std::string& themeName)
 		startAmbient[i] = lights[i]->GetAmbient();
 		startPos[i] = lights[i]->GetComponent<TransformComponent>()->GetPosition();
 	}
-
-
+	
 	if (themeName == "Midnight") {
 		targetDiffuse[0] = Vec4(0.2f, 0.2f, 0.5f, 1.0f);
 		targetSpecular[0] = Vec4(0.9f, 0.9f, 1.0f, 1.0f);
 		targetAmbient[0] = Vec4(0.02f, 0.02f, 0.05f, 1.0f);
 		targetPos[0] = Vec3(0.0f, 15.0f, -10.0f);
 		for(int i=1; i<5; i++) targetDiffuse[i] = Vec4(0.01f, 0.01f, 0.03f, 1.0f);
-	} 
+	}
 	else if (themeName == "Bright") {
 		targetDiffuse[0] = Vec4(1.5f, 1.5f, 1.3f, 1.0f); 
 		targetSpecular[0] = Vec4(1.0f, 1.0f, 1.0f, 1.0f);
@@ -447,7 +421,7 @@ void Scene0g::SetupTheme(const std::string& themeName)
 		targetPos[0] = Vec3(0.0f, 20.0f, 0.0f); 
 		targetDiffuse[1] = Vec4(0.5f, 0.5f, 0.5f, 1.0f); targetPos[1] = Vec3(10, 10, 10);
 		targetDiffuse[2] = Vec4(0.5f, 0.5f, 0.5f, 1.0f); targetPos[2] = Vec3(-10, 10, 10);
-	} 
+	}
 	else if (themeName == "Sunset") {
 		targetDiffuse[0] = Vec4(1.0f, 0.5f, 0.2f, 1.0f); 
 		targetSpecular[0] = Vec4(1.0f, 0.8f, 0.4f, 1.0f);
@@ -515,7 +489,7 @@ void Scene0g::Update(const float deltaTime) {
 	
 	
 	float time = SDL_GetTicks() / 1000.0f; // Seconds since start
-	float radius = 50.0f;
+	float radius = 10.0f;
 	float x = cos(time * 0.5f) * radius;
 	float z = sin(time * 0.5f) * radius;
 	lights[0]->GetComponent<TransformComponent>()->setPosition(Vec3(x, 10.0f, z));
@@ -557,6 +531,7 @@ void Scene0g::Update(const float deltaTime) {
 		pair.second.actor->Update(deltaTime);
 	}
 
+	//Activate collision detection
 	AABBCollisions();
 	//SphereCollisions();
 	if (!selectedActorName.empty()) {
@@ -612,14 +587,14 @@ void Scene0g::Render() const {
 		allPos[i * 3 + 1] = viewPos.y;
 		allPos[i * 3 + 2] = viewPos.z;
 
-		Vec4 d = lights[i]->GetDiffuse();
-		allDiff[i * 4 + 0] = d.x; allDiff[i * 4 + 1] = d.y; allDiff[i * 4 + 2] = d.z; allDiff[i * 4 + 3] = d.w;
+		Vec4 diffuse = lights[i]->GetDiffuse();
+		allDiff[i * 4 + 0] = diffuse.x; allDiff[i * 4 + 1] = diffuse.y; allDiff[i * 4 + 2] = diffuse.z; allDiff[i * 4 + 3] = diffuse.w;
 
-		Vec4 s = lights[i]->GetSpecular();
-		allSpec[i * 4 + 0] = s.x; allSpec[i * 4 + 1] = s.y; allSpec[i * 4 + 2] = s.z; allSpec[i * 4 + 3] = s.w;
+		Vec4 specular = lights[i]->GetSpecular();
+		allSpec[i * 4 + 0] = specular.x; allSpec[i * 4 + 1] = specular.y; allSpec[i * 4 + 2] = specular.z; allSpec[i * 4 + 3] = specular.w;
 
-		Vec4 a = lights[i]->GetAmbient();
-		allAmb[i * 4 + 0] = a.x; allAmb[i * 4 + 1] = a.y; allAmb[i * 4 + 2] = a.z; allAmb[i * 4 + 3] = a.w;
+		Vec4 ambient = lights[i]->GetAmbient();
+		allAmb[i * 4 + 0] = ambient.x; allAmb[i * 4 + 1] = ambient.y; allAmb[i * 4 + 2] = ambient.z; allAmb[i * 4 + 3] = ambient.w;
 	}
 
 	glUniform3fv(shader->GetUniformID("lightPos[0]"), 5, allPos);
@@ -637,14 +612,12 @@ void Scene0g::Render() const {
     	const std::string& name = pair.first;
     	Actor* piece = pair.second.actor.get();
 
-    	float intensity = (name == selectedActorName) ? 2.5f : 1.0f;
+    	float intensity = (name == selectedActorName) ? 10.5f : 1.0f;
     	glUniform1f(shader->GetUniformID("highlightIntensity"), intensity);
     	
        glUniformMatrix4fv(shader->GetUniformID("modelMatrix"), 1, GL_FALSE, piece->GetModelMatrix());
        glBindTexture(GL_TEXTURE_2D, piece->GetComponent<MaterialComponent>()->getTextureID());
        piece->GetComponent<MeshComponent>()->Render();
-
-    	
     }
 
 	if (showHitboxes)
@@ -660,11 +633,7 @@ void Scene0g::Render() const {
 			auto col = piece->GetComponent<CollisionComponent>();
 			if (!col) continue;
 
-			
-			
-		
-       
-			
+	
 			if (name == selectedActorName) {
 				glUniform4f(shader->GetUniformID("debugColor"), 1.0f, 0.41f, 0.70f, 1.0f); 
 			} else {
@@ -694,6 +663,4 @@ void Scene0g::Render() const {
 	glUniform1f(shader->GetUniformID("highlightIntensity"), 1.0f);
     glBindTexture(GL_TEXTURE_2D, 0);
     glUseProgram(0);
-
-	
 }

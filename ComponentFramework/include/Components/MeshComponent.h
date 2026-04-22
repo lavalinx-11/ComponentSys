@@ -16,13 +16,14 @@ class MeshComponent : public Component
 	public:
 		MeshComponent(std::weak_ptr<Component> parent_, const char* filename_);
 		~MeshComponent();
-		virtual bool OnCreate() override;
-		virtual void OnDestroy() override;
-		virtual void Update(const float deltaTime_) override;
-		virtual void Render() const override;
+		bool OnCreate() override;
+		 void OnDestroy() override;
+		 void Update(const float deltaTime_) override;
+		 void Render() const override;
 
 		/// Private helper methods
 		void LoadModel(const char* filename);
-		void StoreMeshData(GLenum drawmode_); 
+		void StoreMeshData(GLenum drawmode_);
+		std::vector<Vec3> GetVertices() {return vertices;}
 };
 

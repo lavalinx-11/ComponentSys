@@ -2,6 +2,8 @@
 #include "TransformComponent.h"
 #include <Plane.h>
 #include <Sphere.h>
+
+#include "MeshComponent.h"
 using namespace MATHEX;
 
 enum class ColliderType {
@@ -34,22 +36,24 @@ class CollisionComponent: public Component {
 	CollisionComponent& operator = (CollisionComponent&&) = delete;
 protected:
 	Ref<TransformComponent> transform;
+	Ref<MeshComponent> mesh;
 	ColliderType colliderType;  
 	Vec3 halfExtents; /// AABB
 	Vec3 offset;
 	Plane plane; /// Plane
 	Sphere sphere;
 	float radius; /// Sphere collision
+
 public:
 	
 	/*											<-DEFAULT FUNCTIONS->														*/
 	CollisionComponent(std::weak_ptr<Component> parent_, Ref<TransformComponent> transform_, float radius_ );
-	CollisionComponent(std::weak_ptr<Component> parent_, Ref<TransformComponent> transform_, Vec3 halfExtents_, Vec3 offset_);
+	CollisionComponent(std::weak_ptr<Component> parent_, Ref<TransformComponent> transform_, Ref<MeshComponent> mesh_);
 	CollisionComponent(std::weak_ptr<Component> parent_, Plane plane_);
-	bool OnCreate(){return true;}
-	void OnDestroy(){}
-	void Update(const float deltaTime_){}
-	void Render()const{}
+	bool OnCreate() override;  
+	void OnDestroy() override {}
+	void Update(const float deltaTime_) override {}
+	void Render()const override {}
 	ColliderType GetColliderType() const {return colliderType;}
 
 
@@ -92,4 +96,5 @@ public:
 		return db;
 	}
 
+	void GenerateBoundingBox(Ref<MeshComponent> mesh);
 };

@@ -112,7 +112,7 @@ void MeshComponent::StoreMeshData(GLenum drawmode_) {
     dateLength = vertices.size();
 
     /// give back the memory used in these vectors. The data is safely stored in the GPU now
-    vertices.clear();
+    //vertices.clear();
     normals.clear();
     uvCoords.clear();
     /// Don't need these defines sticking around anymore si undefine them. 
