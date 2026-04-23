@@ -293,7 +293,6 @@
       <DisableAnalyzeExternal>false</DisableAnalyzeExternal>
       <PreprocessorDefinitions>_MBCS;</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>C:\Users\laval\OneDrive\Documents\SourceTreeRepos\ComponentSys\ComponentFramework\GameDev\imgui;C:\Users\laval\OneDrive\Documents\SourceTreeRepos\ComponentSys\ComponentFramework\include</AdditionalIncludeDirectories>
       <LinkCompiled>true</LinkCompiled>
     </ClCompile>
     <ClCompile Include="src\Actors\CameraActor.cpp">

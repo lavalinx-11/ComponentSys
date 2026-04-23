@@ -71,8 +71,14 @@ private:
 	Vec3 startPos[5];
 	Vec4 targetDiffuse[5], targetSpecular[5], targetAmbient[5];
 	Vec3 targetPos[5];
+	Vec3 debugRayOrigin;
+	Vec3 debugRayDir;
+	Vec3 debugHitPos;
+	
+	
 	
 	// Default Variables
+	bool showDebugRay = false;
 	bool showHitboxes = true;
 	bool canBoardSpin = false;
 	bool isTransitioning = false;

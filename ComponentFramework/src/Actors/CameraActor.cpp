@@ -49,7 +49,7 @@ void CameraActor::HandleEvents(const SDL_Event& event)
 		if (event.type == SDL_EVENT_MOUSE_BUTTON_UP &&
 			event.button.button == SDL_BUTTON_LEFT) {
 			mouseHeld = false;
-			SDL_SetWindowRelativeMouseMode(window, true);
+			SDL_SetWindowRelativeMouseMode(window, false);
 		}
 	}
 	// Handle Mouse Motion if mouse 1 is held down or if the mouse1 override is active

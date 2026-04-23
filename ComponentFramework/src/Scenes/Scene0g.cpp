@@ -545,8 +545,13 @@ void Scene0g::HandleMouseClick(int mouseX, int mouseY)
 {	
 	Vec3 boardHitPos = GetBoardIntersect(mouseX, mouseY);
 	
-	int clickedCol = static_cast<int>(std::round((boardHitPos.x - gridOriginX) / dynamicGridSize));
-	int clickedRow = static_cast<int>(std::round((gridOriginY - boardHitPos.y) / dynamicGridSize));
+	Matrix4 invBoardMat = MMath::inverse(board->GetComponent<TransformComponent>()->GetTransformMatrix());
+	Vec4 localHit4 = invBoardMat * Vec4(boardHitPos.x, boardHitPos.y, boardHitPos.z, 1.0f);
+	Vec3 localHit = Vec3(localHit4.x, localHit4.y, localHit4.z);
+
+
+	int clickedCol = static_cast<int>(std::round((localHit.x - gridOriginX) / dynamicGridSize));
+	int clickedRow = static_cast<int>(std::round((gridOriginY - localHit.y) / dynamicGridSize));
 	std::cout << "4. Grid Calc     : Col: " << clickedCol << " | Row: " << clickedRow << std::endl;
 
 	if (clickedCol < 0 || clickedCol > 7 || clickedRow < 0 || clickedRow > 7) {
@@ -593,8 +598,14 @@ void Scene0g::HandleMouseClick(int mouseX, int mouseY)
 
 Vec3 Scene0g::GetBoardIntersect(int mouseX, int mouseY)
 {
-	int screenWidth, screenHeight;
-	SDL_GetWindowSize(window->getWindow(), &screenWidth, &screenHeight);
+	
+	/*
+	SDL_Window* activeWindow = SDL_GL_GetCurrentWindow();
+	int w, h;
+	SDL_GetWindowSize(activeWindow, &w, &h);
+    
+	float screenWidth = static_cast<float>(w);
+	float screenHeight = static_cast<float>(h);
 
 	// Using R(t) = O+Dt
 	
@@ -610,27 +621,65 @@ Vec3 Scene0g::GetBoardIntersect(int mouseX, int mouseY)
 	// HCS to Camera
 	Matrix4 inverseProj = MMath::inverse(camera->GetProjectionMatrix());
 	Vec4 rayCam = inverseProj * rayClip;
-	rayCam = Vec4(rayCam.x, rayCam.y, -1.0f, 0.0f);
+	if (rayCam.w != 0.0f) {
+		rayCam.x /= rayCam.w;
+		rayCam.y /= rayCam.w;
+		rayCam.z /= rayCam.w;
+	}
+
+	// Now turn it into a pure Direction Vector
+	rayCam = Vec4(rayCam.x, rayCam.y, rayCam.z, 0.0f);
 
 	// Camera to World Space
 	Matrix4 inverseView = MMath::inverse(camera->GetViewMatrix());
 	Vec4 rayWorld = inverseView * rayCam;
 
 	// World Space Direction
-	Vec3 rayDir = VMath::normalize(Vec3(rayWorld.x,rayWorld.y,rayWorld.z));
-	Vec3 camPos = camera->GetComponent<TransformComponent>()->GetPosition();
-    
+	Vec3 rayDir = VMath::normalize(Vec3(rayWorld.x,rayWorld.y,rayWorld.z) - camera->GetPosition());
+	Vec4 trueCamPos = inverseView * Vec4(0.0f, 0.0f, 0.0f, 1.0f);
+	Vec3 camPos = Vec3(trueCamPos.x, trueCamPos.y, trueCamPos.z);    
 	if (std::abs(rayDir.z) < 0.0001f) {
 		return Vec3(0.0f, 0.0f, 0.0f); 
 	}
 	
 	// Distance from origin
 	float t = -camPos.z / rayDir.z;
-	Vec3 intersectionPoint = camPos + (rayDir * t);
+	
+	Vec3 intersectionPoint = camPos + (rayDir * t);*/
+	
+	float mouseXgay, mouseYgay;
+	SDL_GetMouseState(&mouseXgay, &mouseYgay);
+	int w, h;
+	SDL_Window* activeWindow = SDL_GL_GetCurrentWindow();
+	SDL_GetWindowSize(activeWindow, &w, &h);
+
+	// NDC
+	float x = (2.0f * mouseXgay) / static_cast<float>(w) - 1.0f;
+	float y = 1.0f - (2.0f * mouseYgay) / static_cast<float>(h); 
+
+	// take the inv proj to get to view space
+	Matrix4 invProj = MMath::inverse(camera->GetProjectionMatrix());
+	Vec4 rayView = invProj * Vec4(x, y, -1.0f, 1.0f); 
+	rayView /= rayView.w; // Normalize the perspective W
+	// the rest is self-explanatory by the names of the vars
+	Matrix4 camWorldMatrix = MMath::inverse(camera->GetViewMatrix());
+
+	Vec4 worldPoint = camWorldMatrix * rayView;
+	Vec3 worldRayStart = camera->GetPosition();
+	Vec3 worldRayDir = VMath::normalize(Vec3(worldPoint.x, worldPoint.y, worldPoint.z) - worldRayStart);
+	// Distance from origin
+	float t = -worldPoint.z / worldRayDir.z;
+	Vec3 intersectionPoint = worldRayStart + (worldRayDir * t);
+	
 	std::cout << "--- RAYCAST DEBUG ---" << std::endl;
 	std::cout << "1. Screen Pixels : X: " << mouseX << " | Y: " << mouseY << std::endl;
-	std::cout << "2. Ray Direction : X: " << rayDir.x << " | Y: " << rayDir.y << " | Z: " << rayDir.z << std::endl;
+	std::cout << "2. Ray Direction : X: " << worldRayDir.x << " | Y: " << worldRayDir.y << " | Z: " << worldRayDir.z << std::endl;
 	std::cout << "3. 3D Board Hit  : X: " << intersectionPoint.x << " | Y: " << intersectionPoint.y << " | Z: " << intersectionPoint.z << std::endl;
+	
+	debugRayOrigin = worldRayStart;
+	debugRayDir = worldRayDir;
+	debugHitPos = intersectionPoint;
+	showDebugRay = false;
 	return intersectionPoint;
 }
 
@@ -900,6 +949,32 @@ void Scene0g::Render() const {
 		}
 			glUniform1f(shader->GetUniformID("highlightIntensity"), 1.0f);
 		glUniform4f(shader->GetUniformID("debugColor"), 0.0f, 0.0f, 0.0f, 0.0f);		
+	}
+	
+	if (showDebugRay) {
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); // Ensure spheres are solid
+		glBindTexture(GL_TEXTURE_2D, 0); // No texture
+
+		// 1. Draw the Red Tracer Line (30 tiny spheres)
+		glUniform4f(shader->GetUniformID("debugColor"), 1.0f, 0.0f, 0.0f, 1.0f); // Red
+		for (int i = 1; i < 30; i++) {
+			// Space the spheres out along the ray direction
+			Vec3 pointOnRay = debugRayOrigin + (debugRayDir * (float)i); 
+			Matrix4 dotModel = MMath::translate(pointOnRay) * MMath::scale(0.1f, 0.1f, 0.1f);
+           
+			glUniformMatrix4fv(shader->GetUniformID("modelMatrix"), 1, GL_FALSE, dotModel);
+			debugSphere->Render();
+		}
+
+		// 2. Draw the Green Impact Point
+		glUniform4f(shader->GetUniformID("debugColor"), 0.0f, 1.0f, 0.0f, 1.0f); // Green
+		Matrix4 hitModel = MMath::translate(debugHitPos) * MMath::scale(0.3f, 0.3f, 0.3f);
+       
+		glUniformMatrix4fv(shader->GetUniformID("modelMatrix"), 1, GL_FALSE, hitModel);
+		debugSphere->Render();
+       
+		// Reset color to avoid tinting the next frame
+		glUniform4f(shader->GetUniformID("debugColor"), 0.0f, 0.0f, 0.0f, 0.0f); 
 	}
 	
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); 
