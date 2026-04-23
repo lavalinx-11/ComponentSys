@@ -26,6 +26,15 @@ enum PieceType
 	QUEEN,
 	KING
 };
+
+
+enum class MouseState {
+	SELECTING_PIECE,
+	SELECTING_DESTINATION
+};
+
+
+
 struct ActorData
 {
 	std::unique_ptr<Actor> actor;
@@ -46,8 +55,8 @@ private:
 	Ref<CameraActor> camera;
 	Ref<MeshComponent> debugSphere;
 	Ref<MeshComponent> debugCube;
+	MouseState currentState;
 
-	
 	std::unordered_map<std::string, ActorData> actors; 
 	std::string actorName; 
 	std::string actorColour;
@@ -93,6 +102,8 @@ public:
 	void AABBCollisions();
 	void SnapToGrid();
 	bool IsSquareOccupied(int targetCol, int targetRow, Actor* movingPiece) const;
+	void HandleMouseClick(int mouseX, int mouseY);
+	Vec3 GetBoardIntersect(int mouseX, int mouseY);
 };
 
 

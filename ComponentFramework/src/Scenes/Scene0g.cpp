@@ -18,7 +18,7 @@
 
 
 Scene0g::Scene0g() :
-	drawInWireMode{false}, dynamicGridSize(0), gridOriginX(0), gridOriginY(0),
+	currentState{MouseState::SELECTING_PIECE},drawInWireMode{false}, dynamicGridSize(0), gridOriginX(0), gridOriginY(0),
 	window{nullptr},
 	context{nullptr}
 {
@@ -274,6 +274,14 @@ void Scene0g::HandleEvents(const SDL_Event &sdlEvent) {
 		break;
 
 	case SDL_EVENT_MOUSE_BUTTON_DOWN:
+if (sdlEvent.button.button == SDL_BUTTON_LEFT)
+{
+	int mouseX = sdlEvent.button.x;
+	int mouseY = sdlEvent.button.y;
+	
+	HandleMouseClick(mouseX, mouseY);
+}
+		
 		break; 
 
 	case SDL_EVENT_MOUSE_BUTTON_UP:
@@ -485,7 +493,6 @@ void Scene0g::SphereCollisions()
 			auto physB = actorB->GetComponent<PhysicsComponent>();
 			auto transformB = actorB->GetComponent<TransformComponent>();
 			if (!collisionsB || !physB || !transformB) continue;
-
 			
 			collisionsB->SetSphere(transformB->GetPosition(), collisionsB->GetSphere().r);
 			if (collisionSystem->CollisionDetection(collisionsA->GetSphere(), collisionsB->GetSphere())) {
@@ -534,15 +541,110 @@ bool Scene0g::IsSquareOccupied(int targetCol, int targetRow, Actor* movingPiece)
 	return false;
 }
 
+void Scene0g::HandleMouseClick(int mouseX, int mouseY)
+{	
+	Vec3 boardHitPos = GetBoardIntersect(mouseX, mouseY);
+	
+	int clickedCol = static_cast<int>(std::round((boardHitPos.x - gridOriginX) / dynamicGridSize));
+	int clickedRow = static_cast<int>(std::round((gridOriginY - boardHitPos.y) / dynamicGridSize));
+	std::cout << "4. Grid Calc     : Col: " << clickedCol << " | Row: " << clickedRow << std::endl;
+
+	if (clickedCol < 0 || clickedCol > 7 || clickedRow < 0 || clickedRow > 7) {
+		std::cout << "-> OUT OF BOUNDS! Resetting selection." << std::endl;
+		currentState = MouseState::SELECTING_PIECE;
+		selectedActorName = ""; 
+		return;
+	}
+	
+	if (clickedCol < 0 || clickedCol > 7 || clickedRow < 0 || clickedRow > 7) {
+		currentState = MouseState::SELECTING_PIECE;
+		selectedActorName = ""; 
+		return;
+	}
+	
+	if (currentState == MouseState::SELECTING_PIECE) {
+		std::cout << "5. State: SELECTING PIECE at [" << clickedCol << ", " << clickedRow << "]" << std::endl;
+		for (const auto& pair : actors) {
+			if (pair.second.lastValidCol == clickedCol && pair.second.lastValidRow == clickedRow) {
+				std::cout << "-> SUCCESS: Selected " << pair.first << "!" << std::endl;
+				selectedActorName = pair.first;
+				currentState = MouseState::SELECTING_DESTINATION;
+				return; 
+			}
+		}
+		std::cout << "-> FAILED: No piece found at this square." << std::endl;
+	}
+	
+	else if (currentState == MouseState::SELECTING_DESTINATION) {
+		std::cout << "5. State: MOVING PIECE " << selectedActorName << " TO [" << clickedCol << ", " << clickedRow << "]" << std::endl;
+		auto it = actors.find(selectedActorName);
+		if (it != actors.end()) {
+			it->second.lastValidCol = clickedCol;
+			it->second.lastValidRow = clickedRow;
+			it->second.isReturning = true; 
+		}
+
+		selectedActorName = "";
+		currentState = MouseState::SELECTING_PIECE;
+	}
+    
+	
+}
+
+Vec3 Scene0g::GetBoardIntersect(int mouseX, int mouseY)
+{
+	int screenWidth, screenHeight;
+	SDL_GetWindowSize(window->getWindow(), &screenWidth, &screenHeight);
+
+	// Using R(t) = O+Dt
+	
+	// Viewport Space to NDS
+	float x = (2.0f * mouseX) / screenWidth - 1.0f;
+	float y = 1.0f - (2.0f * mouseY) / screenHeight;
+	float z = 1.0f;
+	Vec3 rayNDS = Vec3(x, y, z);
+
+	// NDS to HCS
+	Vec4 rayClip = Vec4(rayNDS.x, rayNDS.y, -1.0f, 1.0f);
+
+	// HCS to Camera
+	Matrix4 inverseProj = MMath::inverse(camera->GetProjectionMatrix());
+	Vec4 rayCam = inverseProj * rayClip;
+	rayCam = Vec4(rayCam.x, rayCam.y, -1.0f, 0.0f);
+
+	// Camera to World Space
+	Matrix4 inverseView = MMath::inverse(camera->GetViewMatrix());
+	Vec4 rayWorld = inverseView * rayCam;
+
+	// World Space Direction
+	Vec3 rayDir = VMath::normalize(Vec3(rayWorld.x,rayWorld.y,rayWorld.z));
+	Vec3 camPos = camera->GetComponent<TransformComponent>()->GetPosition();
+    
+	if (std::abs(rayDir.z) < 0.0001f) {
+		return Vec3(0.0f, 0.0f, 0.0f); 
+	}
+	
+	// Distance from origin
+	float t = -camPos.z / rayDir.z;
+	Vec3 intersectionPoint = camPos + (rayDir * t);
+	std::cout << "--- RAYCAST DEBUG ---" << std::endl;
+	std::cout << "1. Screen Pixels : X: " << mouseX << " | Y: " << mouseY << std::endl;
+	std::cout << "2. Ray Direction : X: " << rayDir.x << " | Y: " << rayDir.y << " | Z: " << rayDir.z << std::endl;
+	std::cout << "3. 3D Board Hit  : X: " << intersectionPoint.x << " | Y: " << intersectionPoint.y << " | Z: " << intersectionPoint.z << std::endl;
+	return intersectionPoint;
+}
+
+
 void Scene0g::SnapToGrid() 
 {
 	const float velocityThreshold = 1.0f;
     const float snapRadius = 0.05f;
 	const float pullRadius = 0.9f;
 	const bool* keys = SDL_GetKeyboardState(nullptr);
-	bool isPlayerPressingKeys = (keys[SDL_SCANCODE_LEFT] || keys[SDL_SCANCODE_RIGHT] || 
-								 keys[SDL_SCANCODE_UP]   || keys[SDL_SCANCODE_DOWN] ||
-								 keys[SDL_SCANCODE_SPACE]|| keys[SDL_SCANCODE_LCTRL]);
+	bool isPlayerPressingKeys =
+		(keys[SDL_SCANCODE_LEFT] || keys[SDL_SCANCODE_RIGHT] || 
+		keys[SDL_SCANCODE_UP]   || keys[SDL_SCANCODE_DOWN] ||
+		keys[SDL_SCANCODE_SPACE]|| keys[SDL_SCANCODE_LCTRL]);
 
 	
     for (auto& pair : actors)
@@ -624,7 +726,6 @@ void Scene0g::SnapToGrid()
 
 
 
-
 void Scene0g::Update(const float deltaTime) {
 	camera->Update(deltaTime);
 	
@@ -700,6 +801,7 @@ void Scene0g::Update(const float deltaTime) {
 	}
 	
 }
+
 void Scene0g::Render() const {
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -787,7 +889,8 @@ void Scene0g::Render() const {
 				Matrix4 debugModel = currentBoardMatrix * MMath::translate(s.center) * MMath::scale(s.r, s.r, s.r);
 				glUniformMatrix4fv(shader->GetUniformID("modelMatrix"), 1, GL_FALSE, debugModel);
 				debugSphere->Render();
-			} 
+			}
+			
 			else if (col->GetColliderType() == ColliderType::AABB) {
 				AABB box = col->GetAABB();
 				Matrix4 debugModel = currentBoardMatrix * MMath::translate(box.center) * MMath::scale(box.halfExtents.x, box.halfExtents.y, box.halfExtents.z);
