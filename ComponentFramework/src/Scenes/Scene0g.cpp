@@ -17,10 +17,10 @@
 #include "Engine/UIManager.h"
 
 
-Scene0g::Scene0g() :
-	drawInWireMode{false}, dynamicGridSize(0), gridOriginX(0), gridOriginY(0),
-	window{nullptr},
-	context{nullptr}
+Scene0g::Scene0g() : 
+                     drawInWireMode{false}, dynamicGridSize(0), gridOriginX(0), gridOriginY(0),
+                     window{nullptr},
+                     context{nullptr}
 {
 	Debug::Info("Created Scene0: ", __FILE__, __LINE__);
 }
@@ -47,6 +47,10 @@ K = Move Board Backward
  
  I have 2 ImGui windows, one to manipulate my lights and another to manipulate the pieces. 
  There is also a toggle to rotate the board where the piece selector is.
+
+
+ The Piece Selector has been updated. After you select a piece you can use the Arrow keys to move the piece around which can collide with other pieces.
+ There is a feature where pieces at rest or NEAR rest will lock into the center of a square in a grid. 
  */
 
 
@@ -68,6 +72,14 @@ static inline float magSqr(const Vec3& v) {
 bool Scene0g::OnCreate() {
 	/*						<-ASSET MANAGER->										*/
 	AssetManager::GetInstance().OnCreate("Include/Engine/Assets.xml");
+	whitePawnTransforms.reserve(16); blackPawnTransforms.reserve(16);
+	whiteRookTransforms.reserve(4); blackRookTransforms.reserve(4);
+	whiteKnightTransforms.reserve(4); blackKnightTransforms.reserve(4);
+	whiteBishopTransforms.reserve(4); blackBishopTransforms.reserve(4);
+	whiteQueenTransforms.reserve(2); blackQueenTransforms.reserve(2); 
+	whiteKingTransforms.reserve(2);	blackKingTransforms.reserve(2);
+
+	
 	
 	/*						<-SHADER AND CAMERA SETUP->										*/
 	shader = AssetManager::GetInstance().GetComponent<ShaderComponent>("PhongShader");
@@ -117,9 +129,11 @@ bool Scene0g::OnCreate() {
 	board->AddComponent<CollisionComponent>(std::weak_ptr<Component>(), board->GetComponent<TransformComponent>(), AssetManager::GetInstance().GetComponent<MeshComponent>("PlaneMesh"));
 	board->OnCreate();
 
+	// Finds the bounding box of the board
 	AABB boardBounds = board->GetComponent<CollisionComponent>()->GetAABB();
 	Vec3 boardScale = board->GetComponent<TransformComponent>()->GetScale();
-	
+
+	// Grabs the half extents to then find each grid section
 	float localHalfExtentX = boardBounds.halfExtents.x / boardScale.x;
 	float localHalfExtentY = boardBounds.halfExtents.z / boardScale.z; 
 
@@ -698,6 +712,48 @@ void Scene0g::Update(const float deltaTime) {
 			}
 		}
 	}
+	whitePawnTransforms.clear();   blackPawnTransforms.clear();
+	whiteRookTransforms.clear();   blackRookTransforms.clear();
+	whiteKnightTransforms.clear(); blackKnightTransforms.clear();
+	whiteBishopTransforms.clear(); blackBishopTransforms.clear();
+	whiteQueenTransforms.clear();  blackQueenTransforms.clear();
+	whiteKingTransforms.clear();   blackKingTransforms.clear();
+
+	for (const auto& pair : actors)
+	{
+		Actor* piece = pair.second.actor.get();
+		PieceType type = pair.second.actorType;
+		bool isWhite = (pair.second.colour == "White");
+
+		switch (type)
+		{
+		case PAWN:
+			if (isWhite) whitePawnTransforms.push_back(piece->GetModelMatrix());
+			else         blackPawnTransforms.push_back(piece->GetModelMatrix());
+			break;
+		case KING:
+			if (isWhite) whiteKingTransforms.push_back(piece->GetModelMatrix());
+			else         blackKingTransforms.push_back(piece->GetModelMatrix());
+			break;
+		case QUEEN:
+			if (isWhite) whiteQueenTransforms.push_back(piece->GetModelMatrix());
+			else         blackQueenTransforms.push_back(piece->GetModelMatrix());
+			break;
+		case BISHOP:
+			if (isWhite) whiteBishopTransforms.push_back(piece->GetModelMatrix());
+			else         blackBishopTransforms.push_back(piece->GetModelMatrix());
+			break;
+		case ROOK:
+			if (isWhite) whiteRookTransforms.push_back(piece->GetModelMatrix());
+			else         blackRookTransforms.push_back(piece->GetModelMatrix());
+			break;
+		case KNIGHT:
+			if (isWhite) whiteKnightTransforms.push_back(piece->GetModelMatrix());
+			else         blackKnightTransforms.push_back(piece->GetModelMatrix());
+			break;
+		}
+	}
+	
 	
 }
 void Scene0g::Render() const {
@@ -746,11 +802,12 @@ void Scene0g::Render() const {
 
 	
 	/*								<-BOARD AND PIECE RENDERER->															*/
+	glUniform1i(shader->GetUniformID("isInstanced"), 0);
     glUniformMatrix4fv(static_cast<GLint>(shader->GetUniformID("modelMatrix")), 1, GL_FALSE, board->GetComponent<TransformComponent>()->GetTransformMatrix());
     glBindTexture(GL_TEXTURE_2D, board->GetComponent<MaterialComponent>()->getTextureID());
     board->GetComponent<MeshComponent>()->Render();
 
-    for (const auto& pair : actors) {
+    /*for (const auto& pair : actors) {
     	const std::string& name = pair.first;
     	Actor* piece = pair.second.actor.get();
 
@@ -760,13 +817,49 @@ void Scene0g::Render() const {
        glUniformMatrix4fv(shader->GetUniformID("modelMatrix"), 1, GL_FALSE, piece->GetModelMatrix());
        glBindTexture(GL_TEXTURE_2D, piece->GetComponent<MaterialComponent>()->getTextureID());
        piece->GetComponent<MeshComponent>()->Render();
-    }
+    }*/
+	
+	glUniform1i(shader->GetUniformID("isInstanced"), 1); 
+	glUniform1f(shader->GetUniformID("highlightIntensity"), 1.0f);
+	auto RenderPieceSwarm = [&](const std::string& meshName, const std::string& materialName, const std::vector<Matrix4>& transforms) {
+		if (transforms.empty()) return;
 
+		auto mesh = AssetManager::GetInstance().GetComponent<MeshComponent>(meshName.c_str());
+       
+		// 2. ADD .c_str() to materialName!
+		auto mat = AssetManager::GetInstance().GetComponent<MaterialComponent>(materialName.c_str());
+
+		mesh->UpdateInstanceData(transforms);
+
+		glBindTexture(GL_TEXTURE_2D, mat->getTextureID());
+		mesh->RenderInstanced(transforms.size());
+	};
+	
+	RenderPieceSwarm("PawnMesh", "WhiteMaterial", whitePawnTransforms);
+	RenderPieceSwarm("PawnMesh", "BlackMaterial", blackPawnTransforms);
+    
+	RenderPieceSwarm("RookMesh", "WhiteMaterial", whiteRookTransforms);
+	RenderPieceSwarm("RookMesh", "BlackMaterial", blackRookTransforms);
+    
+	RenderPieceSwarm("KnightMesh", "WhiteMaterial", whiteKnightTransforms);
+	RenderPieceSwarm("KnightMesh", "BlackMaterial", blackKnightTransforms);
+    
+	RenderPieceSwarm("BishopMesh", "WhiteMaterial", whiteBishopTransforms);
+	RenderPieceSwarm("BishopMesh", "BlackMaterial", blackBishopTransforms);
+    
+	RenderPieceSwarm("QueenMesh", "WhiteMaterial", whiteQueenTransforms);
+	RenderPieceSwarm("QueenMesh", "BlackMaterial", blackQueenTransforms);
+    
+	RenderPieceSwarm("KingMesh", "WhiteMaterial", whiteKingTransforms);
+	RenderPieceSwarm("KingMesh", "BlackMaterial", blackKingTransforms);
+	
 	if (showHitboxes)
 	{
 		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 		glDisable(GL_CULL_FACE);               
-		glBindTexture(GL_TEXTURE_2D, 0);        
+		glBindTexture(GL_TEXTURE_2D, 0);
+		glUniform1i(shader->GetUniformID("isInstanced"), 0);
+		
 		Matrix4 currentBoardMatrix = board->GetComponent<TransformComponent>()->GetTransformMatrix();
 
 		for (const auto& pair : actors) {

@@ -1,6 +1,7 @@
 #pragma once
 #include "Component.h"
 #include <glew.h>
+#include <Matrix.h>
 #include <vector>
 #include <Vector.h>
 using namespace MATH;
@@ -12,9 +13,10 @@ class MeshComponent : public Component
 	std::vector<Vec3> vertices;
 	size_t dateLength;
 	GLenum drawmode;
-	GLuint vao, vbo;
+	GLuint vao, vbo, instanceVBO;
 	Vec3 rawExtents;
 	Vec3 rawOffset;
+	int maxInstances;
 	
 	public:
 		MeshComponent(std::weak_ptr<Component> parent_, const char* filename_);
@@ -31,5 +33,7 @@ class MeshComponent : public Component
 		void DumpVertices() {vertices.clear();}
 	inline Vec3 GetRawExtents() const { return rawExtents; }
 	inline Vec3 GetRawOffset() const { return rawOffset; }
+	void UpdateInstanceData(const std::vector<Matrix4>& transforms);
+	void RenderInstanced(int instanceCount) const;
 };
 

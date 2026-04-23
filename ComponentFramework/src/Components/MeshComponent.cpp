@@ -136,5 +136,38 @@ void MeshComponent::StoreMeshData(GLenum drawmode_) {
 #undef NORMAL_LENGTH
 #undef TEXCOORD_LENGTH
 
+    /*                <-SETUP FOR OPTIMIZED PIECE RENDERING->                               */
+    maxInstances = 32; 
+    
+    glGenBuffers(1, &instanceVBO);
+    glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
+    glBufferData(GL_ARRAY_BUFFER, maxInstances * sizeof(Matrix4), nullptr, GL_DYNAMIC_DRAW);
+    
+    std::size_t vec4Size = sizeof(float) * 4;
+    for (int i = 0; i < 4; i++) {
+        glEnableVertexAttribArray(3 + i);
+        glVertexAttribPointer(3 + i, 4, GL_FLOAT, GL_FALSE, sizeof(Matrix4), reinterpret_cast<void*>(i * vec4Size));
+        glVertexAttribDivisor(3 + i, 1); 
+    }
+    
+    glBindBuffer(GL_ARRAY_BUFFER, 0); 
+    glBindVertexArray(0);
+}
+
+void MeshComponent::UpdateInstanceData(const std::vector<Matrix4>& transforms)
+{
+    if (transforms.empty()) return;
+    
+    glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, transforms.size() * sizeof(Matrix4), &transforms[0]);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+}
+
+void MeshComponent::RenderInstanced(int instanceCount) const
+{
+    if (instanceCount == 0) return;
+    glBindVertexArray(vao);
+    glDrawArraysInstanced(drawmode, 0, dateLength, instanceCount);
+    glBindVertexArray(0);
 }
 

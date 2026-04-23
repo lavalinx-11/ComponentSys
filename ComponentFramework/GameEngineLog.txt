@@ -1,4 +1,4 @@
-Wed Apr 22 20:51:55 2026
+Wed Apr 22 22:05:49 2026
 [INFO]: Starting the SceneManager
 [INFO]: OpenGL version: 4.6.0 Compatibility Profile Context 26.3.1.260309
 [INFO]: Graphics card vendor: ATI Technologies Inc.
@@ -6,11 +6,12 @@ Wed Apr 22 20:51:55 2026
 [INFO]: GLSL Version: 4.60
 [INFO]: Created Scene0: 
 [INFO]: Uniforms:
-"viewMatrix" loc:31
-"modelMatrix" loc:22
-"projectionMatrix" loc:27
-"myTexture" loc:26
-"lightPos[0]" loc:17
+"isInstanced" loc:17
+"modelMatrix" loc:23
+"viewMatrix" loc:32
+"projectionMatrix" loc:28
+"myTexture" loc:27
+"lightPos[0]" loc:18
 "Ambient[0]" loc:0
 "Diffuse[0]" loc:5
 "Specular[0]" loc:10

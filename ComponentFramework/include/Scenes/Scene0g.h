@@ -57,11 +57,25 @@ private:
 	std::unique_ptr<LightActor> lights[5];
 	std::unique_ptr<CollisionSystem> collisionSystem;
 
-	// Vectors 
+
+	
+	// Vectors & Matrices
 	Vec4 startDiffuse[5], startSpecular[5], startAmbient[5];
 	Vec3 startPos[5];
 	Vec4 targetDiffuse[5], targetSpecular[5], targetAmbient[5];
 	Vec3 targetPos[5];
+	std::vector<Matrix4> whitePawnTransforms;
+	std::vector<Matrix4> whiteKnightTransforms;
+	std::vector<Matrix4> whiteBishopTransforms;
+	std::vector<Matrix4> whiteRookTransforms;
+	std::vector<Matrix4> whiteKingTransforms;
+	std::vector<Matrix4> whiteQueenTransforms;
+	std::vector<Matrix4> blackPawnTransforms;
+	std::vector<Matrix4> blackKnightTransforms;
+	std::vector<Matrix4> blackBishopTransforms;
+	std::vector<Matrix4> blackRookTransforms;
+	std::vector<Matrix4> blackKingTransforms;
+	std::vector<Matrix4> blackQueenTransforms;
 	
 	// Default Variables
 	bool showHitboxes = true;
