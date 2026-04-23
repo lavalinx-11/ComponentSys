@@ -44,7 +44,7 @@ void PhysicsComponent::Update(const float deltaTime_)
     vel *= 0.98f; 
     if (transform) {
         Vec3 currentPos = transform->GetPosition();
-        transform->setPosition(currentPos + (vel * deltaTime_));
+        transform->SetPosition(currentPos + (vel * deltaTime_));
     }
 
     force = Vec3(0.0f, 0.0f, 0.0f);

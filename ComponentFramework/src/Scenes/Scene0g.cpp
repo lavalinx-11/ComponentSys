@@ -13,15 +13,14 @@
 #include "Components/ShaderComponent.h"
 #include "Components/TransformComponent.h"
 #include <map>
-#include <direct.h>
 ///ImGui includes
 #include "Engine/UIManager.h"
 
 
 Scene0g::Scene0g() :
-drawInWireMode{false},
-window{ nullptr }, 
-context{ nullptr }
+	drawInWireMode{false}, dynamicGridSize(0), gridOriginX(0), gridOriginY(0),
+	window{nullptr},
+	context{nullptr}
 {
 	Debug::Info("Created Scene0: ", __FILE__, __LINE__);
 }
@@ -62,20 +61,16 @@ static PieceType StringToPieceType(const std::string& typeStr) {
 	if (typeStr == "King")   return PieceType::KING;
 	return PieceType::PAWN;
 }
+static inline float magSqr(const Vec3& v) {
+	return (v.x * v.x) + (v.y * v.y) + (v.z * v.z);
+}
 
 bool Scene0g::OnCreate() {
 	/*						<-ASSET MANAGER->										*/
-	char buffer[256];
-	_getcwd(buffer, 256);
-	std::cout << "My working directory is: " << buffer << std::endl;
-	assetManager = std::make_unique<AssetManager>();
-	if (!assetManager->OnCreate("Include/Engine/Assets.xml")) { 
-		Debug::Error("CRITICAL: Asset Manager failed to start. Aborting scene creation.", __FILE__, __LINE__);
-		return false; 
-	}
-	assetManager->ListAllComponents();
+	AssetManager::GetInstance().OnCreate("Include/Engine/Assets.xml");
+	
 	/*						<-SHADER AND CAMERA SETUP->										*/
-	shader = assetManager->GetComponent<ShaderComponent>("PhongShader");
+	shader = AssetManager::GetInstance().GetComponent<ShaderComponent>("PhongShader");
 	shader->OnCreate();
 	
 	window = new Window();
@@ -115,31 +110,44 @@ bool Scene0g::OnCreate() {
 	
 	/*						<-BOARD ACTOR SETUP->										*/
 	board = std::make_shared<Actor>(std::weak_ptr<Component>());
-	board->AddComponent<MaterialComponent>(assetManager->GetComponent<MaterialComponent>("BoardMaterial"));
-	board->AddComponent<MeshComponent>(std::weak_ptr<Component>(), "meshes/Plane.obj");
+	board->AddComponent<MaterialComponent>(AssetManager::GetInstance().GetComponent<MaterialComponent>("BoardMaterial"));
+	board->AddComponent<MeshComponent>(AssetManager::GetInstance().GetComponent<MeshComponent>("PlaneMesh"));
 	board->AddComponent<TransformComponent>(std::weak_ptr<Component>(), Vec3(0.0f, 0.0f, 0.0f), QMath::angleAxisRotation(-90.0f, Vec3(1.0f, 0.0f, 0.0f)));
 	board->GetComponent<TransformComponent>()->SetScale(Vec3(5.0f, 5.0f, 5.0f));
+	board->AddComponent<CollisionComponent>(std::weak_ptr<Component>(), board->GetComponent<TransformComponent>(), AssetManager::GetInstance().GetComponent<MeshComponent>("PlaneMesh"));
 	board->OnCreate();
+
+	AABB boardBounds = board->GetComponent<CollisionComponent>()->GetAABB();
+	Vec3 boardScale = board->GetComponent<TransformComponent>()->GetScale();
+	
+	float localHalfExtentX = boardBounds.halfExtents.x / boardScale.x;
+	float localHalfExtentY = boardBounds.halfExtents.z / boardScale.z; 
+
+	dynamicGridSize = (localHalfExtentX * 2.0f) / 8.0f; 
+
+	gridOriginX = (-localHalfExtentX) + (dynamicGridSize / 2.0f); 
+	gridOriginY = (localHalfExtentY)  - (dynamicGridSize / 2.0f); 
 
 	
 	/*						<-SETUP FOR COLLISION HITBOXES->					*/
-	debugSphere = assetManager->GetComponent<MeshComponent>("SphereMesh");
+	debugSphere = AssetManager::GetInstance().GetComponent<MeshComponent>("SphereMesh");
 	debugSphere->OnCreate();
 
-	debugCube = assetManager->GetComponent<MeshComponent>("CubeMesh");
+	debugCube = AssetManager::GetInstance().GetComponent<MeshComponent>("CubeMesh");
 	debugCube->OnCreate();
 	
 	// This is a map used to make naming my pieces easier.
 	std::map<std::string, int> pieceCounters;
 	
 	PieceType typeOfActor;
+	auto& assetManager = AssetManager::GetInstance();
 	for (int i = 0; i < 32; i++) {
 		std::string pieceTypes[] = {
 			"Rook", "Knight", "Bishop", "Queen", "King", "Bishop", "Knight", "Rook"
 		};
 		// Tools to index the Unordered Map to more easily index and find things.
 		int pieceIndex = i % 16;
-		int row = i / 8; 
+		//int row = i / 8; 
 		int col = i % 8; 
 		float actorOffset = 1.25f;
 		
@@ -162,39 +170,47 @@ bool Scene0g::OnCreate() {
 		switch (typeOfActor)
 		{
 		case(PAWN):
-			actorNew->AddComponent<MeshComponent>(assetManager->GetComponent<MeshComponent>("PawnMesh"));
+			actorNew->AddComponent<MeshComponent>(assetManager.GetComponent<MeshComponent>("PawnMesh"));
 			break;
 		case(KING):
 			
-			actorNew->AddComponent<MeshComponent>(assetManager->GetComponent<MeshComponent>("KingMesh"));
+			actorNew->AddComponent<MeshComponent>(assetManager.GetComponent<MeshComponent>("KingMesh"));
 			break;
 		case(QUEEN):
-			actorNew->AddComponent<MeshComponent>(assetManager->GetComponent<MeshComponent>("QueenMesh"));
+			actorNew->AddComponent<MeshComponent>(assetManager.GetComponent<MeshComponent>("QueenMesh"));
 			break;
 		case(BISHOP):
-			actorNew->AddComponent<MeshComponent>(assetManager->GetComponent<MeshComponent>("BishopMesh"));
+			actorNew->AddComponent<MeshComponent>(assetManager.GetComponent<MeshComponent>("BishopMesh"));
 			break;
 		case(ROOK):
-			actorNew->AddComponent<MeshComponent>(assetManager->GetComponent<MeshComponent>("RookMesh"));
+			actorNew->AddComponent<MeshComponent>(assetManager.GetComponent<MeshComponent>("RookMesh"));
 			break;
 		case(KNIGHT):
-			actorNew->AddComponent<MeshComponent>(assetManager->GetComponent<MeshComponent>("KnightMesh"));
+			actorNew->AddComponent<MeshComponent>(assetManager.GetComponent<MeshComponent>("KnightMesh"));
 			break;
 		}
 		Vec3 finalPos;
 
 		// Based off of which type of piece it is give it the corresponding texture and update its position
+
+		int boardRow;
 		if (color == "Black")
 		{
-			actorNew->AddComponent<MaterialComponent>(assetManager->GetComponent<MaterialComponent>("BlackMaterial"));
-			finalPos = Vec3(-4.4f + (actorOffset * col), 4.4f - (actorOffset * row), 0.005f);
+			actorNew->AddComponent<MaterialComponent>(assetManager.GetComponent<MaterialComponent>("BlackMaterial"));
+			boardRow = (i < 8) ? 0 : 1;
 		}
 		
 		if (color == "White")
 		{
-			actorNew->AddComponent<MaterialComponent>(assetManager->GetComponent<MaterialComponent>("WhiteMaterial"));
-			finalPos = Vec3(-4.4f + (actorOffset * col), -6.85f + (actorOffset * row), 0.005f);
+			actorNew->AddComponent<MaterialComponent>(assetManager.GetComponent<MaterialComponent>("WhiteMaterial"));
+			boardRow = (i < 24) ? 7 : 6;
+
 		}
+
+		finalPos = Vec3(gridOriginX + (col * dynamicGridSize), gridOriginY - (boardRow * dynamicGridSize), 0.005f);
+
+
+		
 		actorNew->AddComponent<TransformComponent>(std::weak_ptr<Component>(), finalPos, Quaternion(), Vec3(0.125f, 0.125f, 0.125f));
 		Quaternion rot = QMath::angleAxisRotation(90.0f, Vec3(1.0f, 0.0f, 0.0f));
 		actorNew->GetComponent<TransformComponent>()->SetOrientation(actorNew->GetComponent<TransformComponent>()->GetOrientation() *= rot);
@@ -211,14 +227,17 @@ bool Scene0g::OnCreate() {
 			actorNew->GetComponent<TransformComponent>()->SetOrientation(actorNew->GetComponent<TransformComponent>()->GetOrientation() *= extraRot);
 		}
 		// Add the actors into the list assigning the name, move in the pointer, the type of actor it is and the colour of the actor.
-		actors.emplace(actorName, ActorData{std::move(actorNew), typeOfActor, color});
+		Vec3 currentPos = actorNew->GetComponent<TransformComponent>()->GetPosition();
+		Vec3 currentVel = actorNew->GetComponent<PhysicsComponent>()->GetVelocity();
+		int targetCol = std::round((currentPos.x - gridOriginX) / dynamicGridSize);
+		int targetRow = std::round((gridOriginY - currentPos.y) / dynamicGridSize);
+		actors.emplace(actorName, ActorData{std::move(actorNew), typeOfActor, color, targetCol, targetRow, targetCol, targetRow});
 	}
 	return true;
 }
 
 void Scene0g::OnDestroy() {
 	actors.clear();
-	assetManager.reset();
 	shader->OnDestroy();
 	board->OnDestroy();
 	camera->OnDestroy();
@@ -237,14 +256,14 @@ void Scene0g::HandleEvents(const SDL_Event &sdlEvent) {
 		case SDL_SCANCODE_J:
 		{
 			Vec3 speed = Vec3(0.0f, 0.0f, 1.0f);
-			board->GetComponent<TransformComponent>()->setPosition(board->GetComponent<TransformComponent>()->GetPosition() + speed); 
+			board->GetComponent<TransformComponent>()->SetPosition(board->GetComponent<TransformComponent>()->GetPosition() + speed); 
 
 			break;
 		}
 		case SDL_SCANCODE_K:
 		{
 			Vec3 speed = Vec3(0.0f, 0.0f, -1.0f);
-			board->GetComponent<TransformComponent>()->setPosition(board->GetComponent<TransformComponent>()->GetPosition() + speed);
+			board->GetComponent<TransformComponent>()->SetPosition(board->GetComponent<TransformComponent>()->GetPosition() + speed);
 
 			break;
 		}
@@ -289,7 +308,7 @@ void Scene0g::RenderGUI()
 
 			Vec3 pos = lights[i]->GetComponent<TransformComponent>()->GetPosition();
 			if (ImGui::DragFloat3("Position", &pos.x, 0.1f)) {
-				lights[i]->GetComponent<TransformComponent>()->setPosition(pos);
+				lights[i]->GetComponent<TransformComponent>()->SetPosition(pos);
 			}
 
 			Vec4 diff = lights[i]->GetDiffuse();
@@ -387,7 +406,17 @@ void Scene0g::RenderGUI()
 			showHitboxes = true;
 		}
 	}
-	
+
+	if (ImGui::Button("Return Home"))
+	{
+		for (auto &pair : actors)
+		{
+			pair.second.lastValidCol = pair.second.homeCol;
+			pair.second.lastValidRow = pair.second.homeRow;
+
+			pair.second.isReturning = true;
+		}
+	}
 	float cameraSpeed = camera->GetCameraSpeed();
 	float cameraSensitivity = camera->GetSensitivity();
 	if (ImGui::SliderFloat("Cam Speed",&cameraSpeed, 0.1f, 50.0f)) {
@@ -397,6 +426,8 @@ void Scene0g::RenderGUI()
 	if (ImGui::SliderFloat("Cam Sensitivity",&cameraSensitivity, 0.1f, 1.0f)) {
 		camera->SetCamSensitivity(cameraSensitivity);
 	}
+
+	
 	ImGui::End();
 }
 
@@ -477,6 +508,7 @@ void Scene0g::AABBCollisions()
 		if (!colA || !physA) continue;
 
 		for (auto itB = std::next(itA); itB != actors.end(); ++itB) {
+			if (itB->second.isReturning) continue;
 			Actor* actorB = itB->second.actor.get();
 			auto colB = actorB->GetComponent<CollisionComponent>();
 			auto physB = actorB->GetComponent<PhysicsComponent>();
@@ -490,6 +522,109 @@ void Scene0g::AABBCollisions()
 	}
 }
 
+bool Scene0g::IsSquareOccupied(int targetCol, int targetRow, Actor* movingPiece) const
+{
+	for (const auto& pair : actors) {
+		Actor* otherPiece = pair.second.actor.get();
+		if (otherPiece == movingPiece) continue; 
+		if (pair.second.lastValidCol == targetCol && pair.second.lastValidRow == targetRow) {
+			return true; 
+		}
+	}
+	return false;
+}
+
+void Scene0g::SnapToGrid() 
+{
+	const float velocityThreshold = 1.0f;
+    const float snapRadius = 0.05f;
+	const float pullRadius = 0.9f;
+	const bool* keys = SDL_GetKeyboardState(nullptr);
+	bool isPlayerPressingKeys = (keys[SDL_SCANCODE_LEFT] || keys[SDL_SCANCODE_RIGHT] || 
+								 keys[SDL_SCANCODE_UP]   || keys[SDL_SCANCODE_DOWN] ||
+								 keys[SDL_SCANCODE_SPACE]|| keys[SDL_SCANCODE_LCTRL]);
+
+	
+    for (auto& pair : actors)
+    {
+	    Actor* piece = pair.second.actor.get();
+    	auto phys = piece->GetComponent<PhysicsComponent>();
+    	auto transform = piece->GetComponent<TransformComponent>();
+    	
+    	if (pair.first == selectedActorName && isPlayerPressingKeys) {
+    		pair.second.isReturning = false;
+    		continue;
+    	}
+    		Vec3 currentPos = transform->GetPosition();
+    		Vec3 currentVel = phys->GetVelocity();
+    		float currentSpeedSqr = magSqr(currentVel); 
+    		float thresholdSqr = velocityThreshold * velocityThreshold;
+
+    		if (currentSpeedSqr > 0.0001f && currentSpeedSqr < thresholdSqr || pair.second.isReturning) {
+    			float minX = gridOriginX - (dynamicGridSize / 2.0f);
+    			float minY = gridOriginY - (7 * dynamicGridSize) - (dynamicGridSize / 2.0f);
+    			float maxX = gridOriginX + (7 * dynamicGridSize) + (dynamicGridSize / 2.0f);
+    			float maxY = gridOriginY + (dynamicGridSize / 2.0f); 
+
+        
+    			if (!pair.second.isReturning && (currentPos.x < minX || currentPos.x > maxX || 
+					currentPos.y < minY || currentPos.y > maxY)) {
+    				continue; 
+					}
+
+    			int targetCol = std::round((currentPos.x - gridOriginX) / dynamicGridSize);
+    			int targetRow = std::round((gridOriginY - currentPos.y) / dynamicGridSize);
+        	
+    			targetCol = std::max(0, std::min(targetCol, 7));
+    			targetRow = std::max(0, std::min(targetRow, 7));
+    			if (pair.second.isReturning) {
+    				targetCol = pair.second.lastValidCol;
+    				targetRow = pair.second.lastValidRow;
+    			}
+    			else
+    			{
+    				if (targetCol < 0 || targetCol > 7 || targetRow < 0 || targetRow > 7) {
+    					continue; 
+    				}
+        	
+        	
+    				if (IsSquareOccupied(targetCol,targetRow, piece))
+    				{
+    					targetCol = pair.second.lastValidCol;
+    					targetRow = pair.second.lastValidRow;
+    					pair.second.isReturning = true;
+    				}
+    			}
+        	
+    			float targetX = gridOriginX + (targetCol * dynamicGridSize);
+    			float targetY = gridOriginY - (targetRow * dynamicGridSize);
+
+    			float dist = VMath::distance(Vec3(currentPos.x, currentPos.y, 0.0f), Vec3(targetX, targetY, 0.0f));
+        	
+    			if (dist < pullRadius || pair.second.isReturning )
+    			{
+    				if (dist <= snapRadius) {
+    					transform->SetPosition(Vec3(targetX, targetY, currentPos.z));
+    					phys->SetVelocity(Vec3(0.0f, 0.0f, 0.0f));
+    					phys->SetAcceleration(Vec3(0.0f, 0.0f, 0.0f));
+
+    					pair.second.lastValidCol = targetCol;
+    					pair.second.lastValidRow = targetRow;
+    					pair.second.isReturning = false;
+    				} 
+    				else {
+    					Vec3 pullVector = Vec3(targetX, targetY, 0.0f) - Vec3(currentPos.x, currentPos.y, 0.0f);
+    					float pullStrength = pair.second.isReturning ? 1.0f : 1.1f; 
+    					phys->SetVelocity(pullVector * pullStrength);
+    				}
+    			}
+    		}
+    	}
+    }
+
+
+
+
 void Scene0g::Update(const float deltaTime) {
 	camera->Update(deltaTime);
 	
@@ -498,7 +633,7 @@ void Scene0g::Update(const float deltaTime) {
 	float radius = 10.0f;
 	float x = cos(time * 0.5f) * radius;
 	float z = sin(time * 0.5f) * radius;
-	lights[0]->GetComponent<TransformComponent>()->setPosition(Vec3(x, 10.0f, z));
+	lights[0]->GetComponent<TransformComponent>()->SetPosition(Vec3(x, 10.0f, z));
 
 	// Slow transition for the lights 
 	if (isTransitioning) {
@@ -514,7 +649,7 @@ void Scene0g::Update(const float deltaTime) {
 			lights[i]->SetDiffuse(nextDiff);
 			lights[i]->SetSpecular(nextSpec);
 			lights[i]->SetAmbient(nextAmb);
-			lights[i]->GetComponent<TransformComponent>()->setPosition(nextPos);
+			lights[i]->GetComponent<TransformComponent>()->SetPosition(nextPos);
 		}
 		if (transitionAlpha >= 1.0f) isTransitioning = false;
 	}
@@ -539,6 +674,7 @@ void Scene0g::Update(const float deltaTime) {
 
 	//Activate collision detection
 	AABBCollisions();
+	SnapToGrid();
 	//SphereCollisions();
 	if (!selectedActorName.empty()) {
 		auto it = actors.find(selectedActorName);
@@ -618,7 +754,7 @@ void Scene0g::Render() const {
     	const std::string& name = pair.first;
     	Actor* piece = pair.second.actor.get();
 
-    	float intensity = (name == selectedActorName) ? 10.5f : 1.0f;
+    	float intensity = (name == selectedActorName) ? 4.5f : 1.0f;
     	glUniform1f(shader->GetUniformID("highlightIntensity"), intensity);
     	
        glUniformMatrix4fv(shader->GetUniformID("modelMatrix"), 1, GL_FALSE, piece->GetModelMatrix());

@@ -8,11 +8,16 @@
 class AssetManager {
 private:
 	std::unordered_map<std::string, Ref<Component>> componentCatalog;
-public:
     AssetManager();
     ~AssetManager();
-    bool OnCreate(const char* xmlFilePath);
+public:
+static AssetManager& GetInstance() {
+	static AssetManager instance;
+	return instance;
+}
 
+	
+    bool OnCreate(const char* xmlFilePath);
     void RemoveAllComponents();
     void ListAllComponents() const;
 
@@ -23,14 +28,13 @@ public:
     }
 
      template<typename ComponentTemplate>
-Ref<ComponentTemplate> GetComponent(const char* name) const {
-	auto id = componentCatalog.find(name);
-	if (id == componentCatalog.end()) {
-		Debug::Error("Can't find requested component", __FILE__, __LINE__);
-		return Ref<ComponentTemplate>(nullptr);
-	}
-	return std::dynamic_pointer_cast<ComponentTemplate>(id->second);
-}
-
-	
+Ref<ComponentTemplate> GetComponent(const char* name) const
+    {
+	    auto id = componentCatalog.find(name);
+    	if (id == componentCatalog.end()) {
+    		Debug::Error("Can't find requested component", __FILE__, __LINE__);
+    		return Ref<ComponentTemplate>(nullptr);
+    	}
+    	return std::dynamic_pointer_cast<ComponentTemplate>(id->second);
+    }
 };

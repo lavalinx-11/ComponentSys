@@ -36,8 +36,9 @@ public:
 
 	
 	/*											<-SETTERS->														*/
-	void SetMass(float mass_) {mass = mass_;};
-	void SetVelocity(Vec3 velocity_) {vel = velocity_;};
+	void SetMass(float mass_) {mass = mass_;}
+	void SetVelocity(Vec3 velocity_) {vel = velocity_;}
+	void SetAcceleration(Vec3 acceleration_) {accel = acceleration_;}
 	void SetTransform(std::shared_ptr<TransformComponent> transform_) {
 		transform = transform_;
 	}

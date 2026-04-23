@@ -31,6 +31,11 @@ struct ActorData
 	std::unique_ptr<Actor> actor;
 	PieceType actorType;
 	std::string colour;
+	int lastValidCol = 0; 
+	int lastValidRow = 0;
+	int homeCol;
+	int homeRow;
+	bool isReturning = false;
 };
 
 class Scene0g : public Scene {
@@ -51,8 +56,12 @@ private:
 	std::vector<std::unique_ptr<Actor>> knightPieces;
 	std::unique_ptr<LightActor> lights[5];
 	std::unique_ptr<CollisionSystem> collisionSystem;
-	std::unique_ptr<AssetManager> assetManager;
 
+	// Vectors 
+	Vec4 startDiffuse[5], startSpecular[5], startAmbient[5];
+	Vec3 startPos[5];
+	Vec4 targetDiffuse[5], targetSpecular[5], targetAmbient[5];
+	Vec3 targetPos[5];
 	
 	// Default Variables
 	bool showHitboxes = true;
@@ -61,13 +70,10 @@ private:
 	bool drawInWireMode;
 	float transitionAlpha = 0.0f; // 0.0 to 1.0
 	float transitionSpeed = 0.5f; // 1.0 = 1 second, 0.5 = 2 seconds
-
-	// Vectors 
-	Vec4 startDiffuse[5], startSpecular[5], startAmbient[5];
-	Vec3 startPos[5];
-	Vec4 targetDiffuse[5], targetSpecular[5], targetAmbient[5];
-	Vec3 targetPos[5];
-
+	float dynamicGridSize;
+	float gridOriginX;
+	float gridOriginY;
+	
 	
 	// SDL Stuff
 	Window* window;
@@ -85,7 +91,8 @@ public:
 	void SetupTheme(const std::string& themeName);
 	void SphereCollisions();
 	void AABBCollisions();
-	
+	void SnapToGrid();
+	bool IsSquareOccupied(int targetCol, int targetRow, Actor* movingPiece) const;
 };
 
 

@@ -13,6 +13,9 @@ class MeshComponent : public Component
 	size_t dateLength;
 	GLenum drawmode;
 	GLuint vao, vbo;
+	Vec3 rawExtents;
+	Vec3 rawOffset;
+	
 	public:
 		MeshComponent(std::weak_ptr<Component> parent_, const char* filename_);
 		~MeshComponent();
@@ -25,5 +28,8 @@ class MeshComponent : public Component
 		void LoadModel(const char* filename);
 		void StoreMeshData(GLenum drawmode_);
 		std::vector<Vec3> GetVertices() {return vertices;}
+		void DumpVertices() {vertices.clear();}
+	inline Vec3 GetRawExtents() const { return rawExtents; }
+	inline Vec3 GetRawOffset() const { return rawOffset; }
 };
 

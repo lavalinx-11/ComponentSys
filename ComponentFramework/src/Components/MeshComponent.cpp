@@ -74,6 +74,22 @@ void MeshComponent::LoadModel(const char* filename) {
             uvCoords.push_back(uvCoord);
         }
     }
+
+    if (!vertices.empty()) {
+        float maxX = vertices[0].x, maxY = vertices[0].y, maxZ = vertices[0].z;
+        float minX = vertices[0].x, minY = vertices[0].y, minZ = vertices[0].z;
+
+        for (const auto& v : vertices) {
+            maxX = std::max(v.x, maxX); maxY = std::max(v.y, maxY); maxZ = std::max(v.z, maxZ);
+            minX = std::min(v.x, minX); minY = std::min(v.y, minY); minZ = std::min(v.z, minZ);
+        }
+
+        Vec3 maxVertices(maxX, maxY, maxZ);
+        Vec3 minVertices(minX, minY, minZ);
+
+        rawExtents = (maxVertices - minVertices) / 2.0f;
+        rawOffset = (minVertices + maxVertices) / 2.0f;
+    }
 }
 
 void MeshComponent::StoreMeshData(GLenum drawmode_) {
@@ -112,7 +128,7 @@ void MeshComponent::StoreMeshData(GLenum drawmode_) {
     dateLength = vertices.size();
 
     /// give back the memory used in these vectors. The data is safely stored in the GPU now
-    //vertices.clear();
+    vertices.clear();
     normals.clear();
     uvCoords.clear();
     /// Don't need these defines sticking around anymore si undefine them. 
