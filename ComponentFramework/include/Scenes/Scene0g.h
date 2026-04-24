@@ -88,7 +88,8 @@ private:
 	float dynamicGridSize;
 	float gridOriginX;
 	float gridOriginY;
-	
+	float startDelayTimer = 0.0f;
+	bool hasPushedKing = false;
 	
 	// SDL Stuff
 	Window* window;

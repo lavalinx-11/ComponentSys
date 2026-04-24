@@ -72,14 +72,26 @@ void CollisionSystem::AABBCollisionResponse(Ref<CollisionComponent> col1, Ref<Ph
     AABB a = col1->GetAABB();
     AABB b = col2->GetAABB();
     Vec3 distance = a.center - b.center;
-    float xOverlap = (a.halfExtents.x + b.halfExtents.x) - std::abs(distance.x);
+    float xOverlap = (a.halfExtents.x + b.halfExtents.x) - std::abs(distance.x);    
     float yOverlap = (a.halfExtents.y + b.halfExtents.y) - std::abs(distance.y);
-
+    
+  
 
     Vec3 normal;
-    if (xOverlap < yOverlap) {
+    
+    float overlapDiff = std::abs(xOverlap - yOverlap);
+   
+    float cornerThreshold = 0.2f; 
+
+    if (overlapDiff < cornerThreshold) {
+        normal = VMath::normalize(Vec3(distance.x, distance.y, 0.0f));
+    }
+    else if (xOverlap < yOverlap) {
+        // Hit the Left or Right flat wall
         normal = Vec3(distance.x > 0 ? 1.0f : -1.0f, 0.0f, 0.0f);
-    } else {
+    } 
+    else {
+        // Hit the Top or Bottom flat wall
         normal = Vec3(0.0f, distance.y > 0 ? 1.0f : -1.0f, 0.0f);
     }
     

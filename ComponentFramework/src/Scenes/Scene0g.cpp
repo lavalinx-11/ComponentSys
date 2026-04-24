@@ -47,6 +47,19 @@ K = Move Board Backward
  
  I have 2 ImGui windows, one to manipulate my lights and another to manipulate the pieces. 
  There is also a toggle to rotate the board where the piece selector is.
+ 
+ 
+				<-PIECE MOVEMENT->
+UP ARROW = Move Forward
+LEFT ARROW  = Move Left
+DOWN ARROW = Move Backward
+RIGHT ARROW = Move Right
+SPACE = Move Up
+CONTROL = Move Down
+
+
+You can also left click on a square to select a piece and click on another square to move it there
+
  */
 
 
@@ -75,8 +88,11 @@ bool Scene0g::OnCreate() {
 	
 	window = new Window();
 	camera = std::make_shared<CameraActor>(std::weak_ptr<Actor>(), 45.0f, 16.0f / 9.0f, 0.5f, 5000.0f, window->getWindow());
+	Quaternion tiltDown = QMath::angleAxisRotation(-20.0f, Vec3(1.0f, 0.0f, 0.0f));
 	camera->AddComponent<TransformComponent>(std::weak_ptr<Component>(), Vec3(0.0f, 0.0f, -15.0f), Quaternion());
 	camera->OnCreate();
+	camera->SetPosition(Vec3(0.0f, 17.0f, 33.0f));
+	camera->SetOrientaion(tiltDown);
 	camera->SetCamMovement(true);
 	camera->SkyboxSetup(
 			"textures/spacePX.png",	
@@ -233,7 +249,9 @@ bool Scene0g::OnCreate() {
 		int targetRow = std::round((gridOriginY - currentPos.y) / dynamicGridSize);
 		actors.emplace(actorName, ActorData{std::move(actorNew), typeOfActor, color, targetCol, targetRow, targetCol, targetRow});
 	}
+	
 	return true;
+	
 }
 
 // Kill everything
@@ -808,6 +826,18 @@ void Scene0g::SnapToGrid()
 
 
 void Scene0g::Update(const float deltaTime) {
+	
+	if (!hasPushedKing) {
+		startDelayTimer += deltaTime; 
+        
+		if (startDelayTimer >= 2.0f) { 
+			auto it = actors.find("BlackKing");
+			if (it != actors.end()) {
+				it->second.actor->GetComponent<PhysicsComponent>()->SetVelocity(Vec3(-3.0f, -3.0f, 0.0f));
+			}
+			hasPushedKing = true; 
+		}
+	}
 	camera->Update(deltaTime);
 	
 	
