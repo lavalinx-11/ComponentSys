@@ -117,6 +117,7 @@ bool Scene0g::OnCreate() {
 	board->AddComponent<CollisionComponent>(std::weak_ptr<Component>(), board->GetComponent<TransformComponent>(), AssetManager::GetInstance().GetComponent<MeshComponent>("PlaneMesh"));
 	board->OnCreate();
 
+	// Make an AABB for the board to find out how big it is then get the grid size from it's half extents (THIS IS IMPORTANT FOR LATER)
 	AABB boardBounds = board->GetComponent<CollisionComponent>()->GetAABB();
 	Vec3 boardScale = board->GetComponent<TransformComponent>()->GetScale();
 	
@@ -149,7 +150,6 @@ bool Scene0g::OnCreate() {
 		int pieceIndex = i % 16;
 		//int row = i / 8; 
 		int col = i % 8; 
-		float actorOffset = 1.25f;
 		
 		// Used to determine what type of actor/chess piece this actor should be.
 		std::string type = (pieceIndex < 8) ? pieceTypes[pieceIndex] : "Pawn";
@@ -236,6 +236,7 @@ bool Scene0g::OnCreate() {
 	return true;
 }
 
+// Kill everything
 void Scene0g::OnDestroy() {
 	actors.clear();
 	shader->OnDestroy();
@@ -274,14 +275,20 @@ void Scene0g::HandleEvents(const SDL_Event &sdlEvent) {
 		break;
 
 	case SDL_EVENT_MOUSE_BUTTON_DOWN:
-if (sdlEvent.button.button == SDL_BUTTON_LEFT)
-{
-	int mouseX = sdlEvent.button.x;
-	int mouseY = sdlEvent.button.y;
+		{
+			ImGuiIO& io = ImGui::GetIO();
+			if (io.WantCaptureMouse) {
+				break; 
+			}
+			if (sdlEvent.button.button == SDL_BUTTON_LEFT)
+			{
 	
-	HandleMouseClick(mouseX, mouseY);
-}
-		
+				int mouseX = sdlEvent.button.x;
+				int mouseY = sdlEvent.button.y;
+	
+				HandleMouseClick(mouseX, mouseY);
+			}
+		}
 		break; 
 
 	case SDL_EVENT_MOUSE_BUTTON_UP:
@@ -414,7 +421,8 @@ void Scene0g::RenderGUI()
 			showHitboxes = true;
 		}
 	}
-
+	
+	// Makes all pieces go back to their home square
 	if (ImGui::Button("Return Home"))
 	{
 		for (auto &pair : actors)
@@ -427,6 +435,8 @@ void Scene0g::RenderGUI()
 	}
 	float cameraSpeed = camera->GetCameraSpeed();
 	float cameraSensitivity = camera->GetSensitivity();
+	
+	// Camera sliders for comfort
 	if (ImGui::SliderFloat("Cam Speed",&cameraSpeed, 0.1f, 50.0f)) {
 		camera->SetCameraSpeed(cameraSpeed);
 	}
@@ -442,6 +452,7 @@ void Scene0g::RenderGUI()
 //					<-PRESET LIGHTING THEMES->					//
 void Scene0g::SetupTheme(const std::string& themeName)
 {
+	
 	isTransitioning = true;
 	transitionAlpha = 0.0f;
 
@@ -507,23 +518,25 @@ void Scene0g::SphereCollisions()
 
 void Scene0g::AABBCollisions()
 {
+	// gets the pieces collision and physics components then runs collision detection and response
 	for (auto itA = actors.begin(); itA != actors.end(); ++itA) {
+		if (itA->second.isReturning) continue;
 		Actor* actorA = itA->second.actor.get();
-		auto colA = actorA->GetComponent<CollisionComponent>();
+		auto collisionA = actorA->GetComponent<CollisionComponent>();
 		auto physA = actorA->GetComponent<PhysicsComponent>();
-
-		if (!colA || !physA) continue;
+		
+		if (!collisionA || !physA) continue;
 
 		for (auto itB = std::next(itA); itB != actors.end(); ++itB) {
 			if (itB->second.isReturning) continue;
 			Actor* actorB = itB->second.actor.get();
-			auto colB = actorB->GetComponent<CollisionComponent>();
+			auto collisionB = actorB->GetComponent<CollisionComponent>();
 			auto physB = actorB->GetComponent<PhysicsComponent>();
 
-			if (!colB || !physB) continue;
+			if (!collisionB || !physB) continue;
 
-			if (collisionSystem->CollisionDetection(colA->GetAABB(), colB->GetAABB())) {
-				collisionSystem->AABBCollisionResponse(colA, physA, colB, physB);
+			if (collisionSystem->CollisionDetection(collisionA->GetAABB(), collisionB->GetAABB())) {
+				collisionSystem->AABBCollisionResponse(collisionA, physA, collisionB, physB);
 			}
 		}
 	}
@@ -531,6 +544,7 @@ void Scene0g::AABBCollisions()
 
 bool Scene0g::IsSquareOccupied(int targetCol, int targetRow, Actor* movingPiece) const
 {
+	// Checks if a piece is inside the square you clicked
 	for (const auto& pair : actors) {
 		Actor* otherPiece = pair.second.actor.get();
 		if (otherPiece == movingPiece) continue; 
@@ -541,54 +555,56 @@ bool Scene0g::IsSquareOccupied(int targetCol, int targetRow, Actor* movingPiece)
 	return false;
 }
 
+// This function checks where you clicked then moves the piece there through the feature implemented in the grid system
 void Scene0g::HandleMouseClick(int mouseX, int mouseY)
 {	
+	
 	Vec3 boardHitPos = GetBoardIntersect(mouseX, mouseY);
 	
+	// Get the raw hit locations from the intersect
 	Matrix4 invBoardMat = MMath::inverse(board->GetComponent<TransformComponent>()->GetTransformMatrix());
 	Vec4 localHit4 = invBoardMat * Vec4(boardHitPos.x, boardHitPos.y, boardHitPos.z, 1.0f);
 	Vec3 localHit = Vec3(localHit4.x, localHit4.y, localHit4.z);
-
-
+	
+	
+	// Set the clicked column and row 
 	int clickedCol = static_cast<int>(std::round((localHit.x - gridOriginX) / dynamicGridSize));
 	int clickedRow = static_cast<int>(std::round((gridOriginY - localHit.y) / dynamicGridSize));
-	std::cout << "4. Grid Calc     : Col: " << clickedCol << " | Row: " << clickedRow << std::endl;
 
+	
+	// Out of bounds check
 	if (clickedCol < 0 || clickedCol > 7 || clickedRow < 0 || clickedRow > 7) {
-		std::cout << "-> OUT OF BOUNDS! Resetting selection." << std::endl;
 		currentState = MouseState::SELECTING_PIECE;
 		selectedActorName = ""; 
 		return;
 	}
 	
-	if (clickedCol < 0 || clickedCol > 7 || clickedRow < 0 || clickedRow > 7) {
-		currentState = MouseState::SELECTING_PIECE;
-		selectedActorName = ""; 
-		return;
-	}
 	
 	if (currentState == MouseState::SELECTING_PIECE) {
-		std::cout << "5. State: SELECTING PIECE at [" << clickedCol << ", " << clickedRow << "]" << std::endl;
+		// If youo clicked on a space where a piece was then set the selected actor
 		for (const auto& pair : actors) {
 			if (pair.second.lastValidCol == clickedCol && pair.second.lastValidRow == clickedRow) {
-				std::cout << "-> SUCCESS: Selected " << pair.first << "!" << std::endl;
 				selectedActorName = pair.first;
 				currentState = MouseState::SELECTING_DESTINATION;
 				return; 
 			}
 		}
-		std::cout << "-> FAILED: No piece found at this square." << std::endl;
 	}
 	
 	else if (currentState == MouseState::SELECTING_DESTINATION) {
-		std::cout << "5. State: MOVING PIECE " << selectedActorName << " TO [" << clickedCol << ", " << clickedRow << "]" << std::endl;
+		// Check for actor then check if the square is occupied if not then move to that space
 		auto it = actors.find(selectedActorName);
 		if (it != actors.end()) {
-			it->second.lastValidCol = clickedCol;
-			it->second.lastValidRow = clickedRow;
-			it->second.isReturning = true; 
+			if (IsSquareOccupied(clickedCol, clickedRow, it->second.actor.get())) {
+				it->second.isReturning = true;
+			} else {
+				it->second.lastValidCol = clickedCol;
+				it->second.lastValidRow = clickedRow;
+				it->second.isReturning = true; 
+			}
 		}
-
+		
+		// Reset selected piece after selecting a location
 		selectedActorName = "";
 		currentState = MouseState::SELECTING_PIECE;
 	}
@@ -598,12 +614,12 @@ void Scene0g::HandleMouseClick(int mouseX, int mouseY)
 
 Vec3 Scene0g::GetBoardIntersect(int mouseX, int mouseY)
 {
-	
-	/*
+	// Get the size of the active window 
 	SDL_Window* activeWindow = SDL_GL_GetCurrentWindow();
 	int w, h;
 	SDL_GetWindowSize(activeWindow, &w, &h);
     
+	// Grab screen height and width
 	float screenWidth = static_cast<float>(w);
 	float screenHeight = static_cast<float>(h);
 
@@ -635,49 +651,43 @@ Vec3 Scene0g::GetBoardIntersect(int mouseX, int mouseY)
 	Vec4 rayWorld = inverseView * rayCam;
 
 	// World Space Direction
-	Vec3 rayDir = VMath::normalize(Vec3(rayWorld.x,rayWorld.y,rayWorld.z) - camera->GetPosition());
+	Vec3 rayDir = VMath::normalize(Vec3(rayWorld.x,rayWorld.y,rayWorld.z));
 	Vec4 trueCamPos = inverseView * Vec4(0.0f, 0.0f, 0.0f, 1.0f);
 	Vec3 camPos = Vec3(trueCamPos.x, trueCamPos.y, trueCamPos.z);    
 	if (std::abs(rayDir.z) < 0.0001f) {
 		return Vec3(0.0f, 0.0f, 0.0f); 
 	}
-	
+		
 	// Distance from origin
 	float t = -camPos.z / rayDir.z;
 	
-	Vec3 intersectionPoint = camPos + (rayDir * t);*/
 	
-	float mouseXgay, mouseYgay;
-	SDL_GetMouseState(&mouseXgay, &mouseYgay);
-	int w, h;
-	SDL_Window* activeWindow = SDL_GL_GetCurrentWindow();
-	SDL_GetWindowSize(activeWindow, &w, &h);
-
-	// NDC
-	float x = (2.0f * mouseXgay) / static_cast<float>(w) - 1.0f;
-	float y = 1.0f - (2.0f * mouseYgay) / static_cast<float>(h); 
-
-	// take the inv proj to get to view space
-	Matrix4 invProj = MMath::inverse(camera->GetProjectionMatrix());
-	Vec4 rayView = invProj * Vec4(x, y, -1.0f, 1.0f); 
-	rayView /= rayView.w; // Normalize the perspective W
-	// the rest is self-explanatory by the names of the vars
-	Matrix4 camWorldMatrix = MMath::inverse(camera->GetViewMatrix());
-
-	Vec4 worldPoint = camWorldMatrix * rayView;
-	Vec3 worldRayStart = camera->GetPosition();
-	Vec3 worldRayDir = VMath::normalize(Vec3(worldPoint.x, worldPoint.y, worldPoint.z) - worldRayStart);
-	// Distance from origin
-	float t = -worldPoint.z / worldRayDir.z;
-	Vec3 intersectionPoint = worldRayStart + (worldRayDir * t);
+	// Calculate the bord normal by getting the up vector of the board
+	Vec3 boardPos = board->GetComponent<TransformComponent>()->GetPosition();
+	Matrix4 boardMat = board->GetComponent<TransformComponent>()->GetTransformMatrix();
+	Vec4 normal4 = boardMat * Vec4(0.0f, 0.0f, 1.0f, 0.0f); 
+	Vec3 boardNormal = VMath::normalize(Vec3(normal4.x, normal4.y, normal4.z));
 	
-	std::cout << "--- RAYCAST DEBUG ---" << std::endl;
-	std::cout << "1. Screen Pixels : X: " << mouseX << " | Y: " << mouseY << std::endl;
-	std::cout << "2. Ray Direction : X: " << worldRayDir.x << " | Y: " << worldRayDir.y << " | Z: " << worldRayDir.z << std::endl;
-	std::cout << "3. 3D Board Hit  : X: " << intersectionPoint.x << " | Y: " << intersectionPoint.y << " | Z: " << intersectionPoint.z << std::endl;
+	// Ray vs Plane check
+	float denominator = VMath::dot(rayDir, boardNormal);
+	Vec3 intersectionPoint = Vec3(0.0f, 0.0f, 0.0f);
+
+	// If the denominator is close to 0, the laser is shooting perfectly parallel to the board 
+	if (std::abs(denominator) > 0.0001f) {
+		Vec3 vectorToBoard = boardPos - camPos;
+		float t = VMath::dot(vectorToBoard, boardNormal) / denominator;
+    
+		// If t is positive the ray hit the board
+		if (t >= 0.0f) {
+			intersectionPoint = camPos + (rayDir * t);
+		}
+	}
 	
-	debugRayOrigin = worldRayStart;
-	debugRayDir = worldRayDir;
+	
+	
+	// Toggles on or off debug raycast rendering
+	debugRayOrigin = camPos;
+	debugRayDir = rayDir;
 	debugHitPos = intersectionPoint;
 	showDebugRay = false;
 	return intersectionPoint;
@@ -686,9 +696,11 @@ Vec3 Scene0g::GetBoardIntersect(int mouseX, int mouseY)
 
 void Scene0g::SnapToGrid() 
 {
-	const float velocityThreshold = 1.0f;
-    const float snapRadius = 0.05f;
-	const float pullRadius = 0.9f;
+	const float velocityThreshold = 1.0f; // Highest velocity before getting
+    const float snapRadius = 0.05f; // The radius to the center where the piece locks itself into place and terminate velocity
+	const float pullRadius = 0.9f; // The radius to the center where you are drawn to the snap location
+	
+	// Check if the player is applying input and ignore snapping if you are
 	const bool* keys = SDL_GetKeyboardState(nullptr);
 	bool isPlayerPressingKeys =
 		(keys[SDL_SCANCODE_LEFT] || keys[SDL_SCANCODE_RIGHT] || 
@@ -698,47 +710,57 @@ void Scene0g::SnapToGrid()
 	
     for (auto& pair : actors)
     {
+    	// Get the actors pointer and physics and transform components as references
 	    Actor* piece = pair.second.actor.get();
     	auto phys = piece->GetComponent<PhysicsComponent>();
     	auto transform = piece->GetComponent<TransformComponent>();
     	
+    	// If it's returning to a square ignore or if player is pressing a key
     	if (pair.first == selectedActorName && isPlayerPressingKeys) {
     		pair.second.isReturning = false;
     		continue;
     	}
+    	
+    	// Grab current speed and velocity
     		Vec3 currentPos = transform->GetPosition();
     		Vec3 currentVel = phys->GetVelocity();
     		float currentSpeedSqr = magSqr(currentVel); 
     		float thresholdSqr = velocityThreshold * velocityThreshold;
 
+    	//  if speed is in threshold or if the player is returning to the square continue
     		if (currentSpeedSqr > 0.0001f && currentSpeedSqr < thresholdSqr || pair.second.isReturning) {
+    			// Grab the board grid
     			float minX = gridOriginX - (dynamicGridSize / 2.0f);
     			float minY = gridOriginY - (7 * dynamicGridSize) - (dynamicGridSize / 2.0f);
     			float maxX = gridOriginX + (7 * dynamicGridSize) + (dynamicGridSize / 2.0f);
     			float maxY = gridOriginY + (dynamicGridSize / 2.0f); 
 
-        
+        // Check if out of bounds
     			if (!pair.second.isReturning && (currentPos.x < minX || currentPos.x > maxX || 
 					currentPos.y < minY || currentPos.y > maxY)) {
     				continue; 
 					}
-
+    			
+    			// Target location for where piece is going to
     			int targetCol = std::round((currentPos.x - gridOriginX) / dynamicGridSize);
     			int targetRow = std::round((gridOriginY - currentPos.y) / dynamicGridSize);
         	
     			targetCol = std::max(0, std::min(targetCol, 7));
     			targetRow = std::max(0, std::min(targetRow, 7));
+    			
+    			// If piece is returning set target to last valid location (previously captured square)
     			if (pair.second.isReturning) {
     				targetCol = pair.second.lastValidCol;
     				targetRow = pair.second.lastValidRow;
     			}
     			else
     			{
+    				// Out of bounds check
     				if (targetCol < 0 || targetCol > 7 || targetRow < 0 || targetRow > 7) {
     					continue; 
     				}
         	
-        	
+        	// If the square is occupied then set it to go back to it's previous location
     				if (IsSquareOccupied(targetCol,targetRow, piece))
     				{
     					targetCol = pair.second.lastValidCol;
@@ -747,25 +769,35 @@ void Scene0g::SnapToGrid()
     				}
     			}
         	
+    			// Target X and Y positions
     			float targetX = gridOriginX + (targetCol * dynamicGridSize);
     			float targetY = gridOriginY - (targetRow * dynamicGridSize);
 
+    			// Distance of position to target location
     			float dist = VMath::distance(Vec3(currentPos.x, currentPos.y, 0.0f), Vec3(targetX, targetY, 0.0f));
         	
+    			// If you're within pull distance or returning home start pulling the piece
     			if (dist < pullRadius || pair.second.isReturning )
     			{
+    				//Check if you're in the lock in radius
     				if (dist <= snapRadius) {
+    					// Kill velocity acceleration and set position to target
     					transform->SetPosition(Vec3(targetX, targetY, currentPos.z));
     					phys->SetVelocity(Vec3(0.0f, 0.0f, 0.0f));
     					phys->SetAcceleration(Vec3(0.0f, 0.0f, 0.0f));
 
+    					
+    					// Set new last valid location as now you are in a valid spot
     					pair.second.lastValidCol = targetCol;
     					pair.second.lastValidRow = targetRow;
+    					
+    					// Turn off returning
     					pair.second.isReturning = false;
     				} 
     				else {
+    					// Pull piece towards snap location until it's in snap location and snap on
     					Vec3 pullVector = Vec3(targetX, targetY, 0.0f) - Vec3(currentPos.x, currentPos.y, 0.0f);
-    					float pullStrength = pair.second.isReturning ? 1.0f : 1.1f; 
+    					float pullStrength = pair.second.isReturning ? 2.0f : 1.1f; 
     					phys->SetVelocity(pullVector * pullStrength);
     				}
     			}
@@ -780,8 +812,9 @@ void Scene0g::Update(const float deltaTime) {
 	
 	
 	float time = SDL_GetTicks() / 1000.0f; // Seconds since start
-	float radius = 10.0f;
-	float x = cos(time * 0.5f) * radius;
+	float radius = 10.0f; // Radius of spotlight
+	// Update position of spotlight
+	float x = cos(time * 0.5f) * radius; 
 	float z = sin(time * 0.5f) * radius;
 	lights[0]->GetComponent<TransformComponent>()->SetPosition(Vec3(x, 10.0f, z));
 
@@ -817,15 +850,19 @@ void Scene0g::Update(const float deltaTime) {
 		}
 	}
 
-
+	// Update actors
 	for (auto& pair : actors) {
 		pair.second.actor->Update(deltaTime);
 	}
 
 	//Activate collision detection
 	AABBCollisions();
+	
+	// Function that makes pieces align to center of grid 
 	SnapToGrid();
 	//SphereCollisions();
+	
+	// Arrow Key Piece Movement
 	if (!selectedActorName.empty()) {
 		auto it = actors.find(selectedActorName);
 		if (it != actors.end()) {
@@ -833,7 +870,7 @@ void Scene0g::Update(const float deltaTime) {
 			const bool* keys = SDL_GetKeyboardState(nullptr);
 			Vec3 forceDir(0.0f, 0.0f, 0.0f);
 
-
+	/*								<-ARROW KEY MOVEMENT ON SELECTED PIECES->											*/
 			if (keys[SDL_SCANCODE_LEFT])  forceDir.x -= 1.0f;
 			if (keys[SDL_SCANCODE_RIGHT]) forceDir.x += 1.0f;
 			if (keys[SDL_SCANCODE_UP])    forceDir.y += 1.0f;
@@ -841,6 +878,7 @@ void Scene0g::Update(const float deltaTime) {
 			if (keys[SDL_SCANCODE_SPACE]) forceDir.z += 1.0f;
 			if (keys[SDL_SCANCODE_LCTRL]) forceDir.z -= 1.0f;
 			
+			// Apply force to piece to move it
 			if (VMath::mag(forceDir) > 0.001f) {
 				forceDir = VMath::normalize(forceDir);
 				float strength = 40.0f; 
@@ -872,6 +910,8 @@ void Scene0g::Render() const {
 	float allSpec[20];    // 5 lights * 4 floats 
 	float allAmb[20];     // 5 lights * 4 floats 
 
+	
+	// Render Lights
 	for (int i = 0; i < 5; i++) {
 		Vec3 worldPos = lights[i]->GetComponent<TransformComponent>()->GetPosition();
 		Vec4 viewPos = camera->GetViewMatrix() * Vec4(worldPos.x, worldPos.y, worldPos.z, 1.0f);
@@ -890,6 +930,8 @@ void Scene0g::Render() const {
 		allAmb[i * 4 + 0] = ambient.x; allAmb[i * 4 + 1] = ambient.y; allAmb[i * 4 + 2] = ambient.z; allAmb[i * 4 + 3] = ambient.w;
 	}
 
+	
+	// Send in lights to shader
 	glUniform3fv(shader->GetUniformID("lightPos[0]"), 5, allPos);
 	glUniform4fv(shader->GetUniformID("Diffuse[0]"),  5, allDiff);
 	glUniform4fv(shader->GetUniformID("Specular[0]"), 5, allSpec);
@@ -901,10 +943,13 @@ void Scene0g::Render() const {
     glBindTexture(GL_TEXTURE_2D, board->GetComponent<MaterialComponent>()->getTextureID());
     board->GetComponent<MeshComponent>()->Render();
 
+	
+	// Render actors
     for (const auto& pair : actors) {
     	const std::string& name = pair.first;
     	Actor* piece = pair.second.actor.get();
 
+    	// If selected send in highlight intensity (4.5 is bright 1.0 means no highight)
     	float intensity = (name == selectedActorName) ? 4.5f : 1.0f;
     	glUniform1f(shader->GetUniformID("highlightIntensity"), intensity);
     	
@@ -913,6 +958,8 @@ void Scene0g::Render() const {
        piece->GetComponent<MeshComponent>()->Render();
     }
 
+	
+	// Render hitboxes if true
 	if (showHitboxes)
 	{
 		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -925,14 +972,16 @@ void Scene0g::Render() const {
 			Actor* piece = pair.second.actor.get();
 			auto col = piece->GetComponent<CollisionComponent>();
 			if (!col) continue;
-
-	
+			
+			// Find out if the actor is selected and if it is then highlight it
 			if (name == selectedActorName) {
 				glUniform4f(shader->GetUniformID("debugColor"), 1.0f, 0.41f, 0.70f, 1.0f); 
 			} else {
 				glUniform4f(shader->GetUniformID("debugColor"), 0.5f, 0.0f, 0.8f, 1.0f); 
 			}
 			
+			
+			// Depending on the type of collisions draw a different object
 			if (col->GetColliderType() == ColliderType::SPHERE) {
 				Sphere s = col->GetSphere();
 				Matrix4 debugModel = currentBoardMatrix * MMath::translate(s.center) * MMath::scale(s.r, s.r, s.r);
@@ -951,29 +1000,26 @@ void Scene0g::Render() const {
 		glUniform4f(shader->GetUniformID("debugColor"), 0.0f, 0.0f, 0.0f, 0.0f);		
 	}
 	
+	
+	
+		// Render sphere on raycast if debug function is enables
 	if (showDebugRay) {
-		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); // Ensure spheres are solid
-		glBindTexture(GL_TEXTURE_2D, 0); // No texture
-
-		// 1. Draw the Red Tracer Line (30 tiny spheres)
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); 
+		glBindTexture(GL_TEXTURE_2D, 0); 
+		
 		glUniform4f(shader->GetUniformID("debugColor"), 1.0f, 0.0f, 0.0f, 1.0f); // Red
 		for (int i = 1; i < 30; i++) {
-			// Space the spheres out along the ray direction
 			Vec3 pointOnRay = debugRayOrigin + (debugRayDir * (float)i); 
 			Matrix4 dotModel = MMath::translate(pointOnRay) * MMath::scale(0.1f, 0.1f, 0.1f);
-           
 			glUniformMatrix4fv(shader->GetUniformID("modelMatrix"), 1, GL_FALSE, dotModel);
 			debugSphere->Render();
 		}
 
-		// 2. Draw the Green Impact Point
 		glUniform4f(shader->GetUniformID("debugColor"), 0.0f, 1.0f, 0.0f, 1.0f); // Green
 		Matrix4 hitModel = MMath::translate(debugHitPos) * MMath::scale(0.3f, 0.3f, 0.3f);
        
 		glUniformMatrix4fv(shader->GetUniformID("modelMatrix"), 1, GL_FALSE, hitModel);
 		debugSphere->Render();
-       
-		// Reset color to avoid tinting the next frame
 		glUniform4f(shader->GetUniformID("debugColor"), 0.0f, 0.0f, 0.0f, 0.0f); 
 	}
 	

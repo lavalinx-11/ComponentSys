@@ -68,7 +68,7 @@ void CollisionSystem::SphereSphereCollisionResponse(Sphere s1, Ref<PhysicsCompon
 
 void CollisionSystem::AABBCollisionResponse(Ref<CollisionComponent> col1, Ref<PhysicsComponent> pc1, Ref<CollisionComponent> col2, Ref<PhysicsComponent> pc2)
 {
-
+// Find normal of piece then apply impulse 
     AABB a = col1->GetAABB();
     AABB b = col2->GetAABB();
     Vec3 distance = a.center - b.center;
@@ -83,15 +83,7 @@ void CollisionSystem::AABBCollisionResponse(Ref<CollisionComponent> col1, Ref<Ph
         normal = Vec3(0.0f, distance.y > 0 ? 1.0f : -1.0f, 0.0f);
     }
     
-    /*float penetration = std::min(xOverlap, yOverlap);
-    const float percent = 1.0f; 
-    const float slop = 0.01f;   
-    if (penetration > slop) {
-        Vec3 correction = ((penetration - slop) / (1.0f/pc1->GetMass() + 1.0f/pc2->GetMass())) * percent * normal;
-        col1->transform->setPosition(col1->transform->GetPosition() + (correction / pc1->GetMass()));
-        col2->transform->setPosition(col2->transform->GetPosition() - (correction / pc2->GetMass()));
-    }*/
-    
+
     ApplyImpulse(pc1,pc2, normal);
 }
 
